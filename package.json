@@ -1,0 +1,24 @@
+{
+  "name": "zhime",
+  "version": "0.0.1",
+  "description": "Chrome OS IME,Browser Extension IME UI,VScode Simple IME.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhangkaiser/zhime.git"
+  },
+  "keywords": [
+    "ChromeOS IME",
+    "Web IME",
+    "VScode IME"
+  ],
+  "author": "KaiserZh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zhangkaiser/zhime/issues"
+  },
+  "homepage": "https://github.com/zhangkaiser/zhime#readme"
+}
