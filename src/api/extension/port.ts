@@ -1,6 +1,6 @@
 import { IPort, IPortConstructor } from "src/api/common/port";
 import { registerEventDisposable } from "src/api/extension/event";
-import { Disposable } from "src/api/common/event";
+import { Disposable } from "src/api/common/disposable";
 
 export class Port extends Disposable implements IPort {
 
@@ -10,13 +10,13 @@ export class Port extends Disposable implements IPort {
   onmessage?: (msg: IMessageObject<any>, port: IPort) => void;
   
 
-  constructor(readonly extID: string) {
+  constructor(readonly name: string) {
     super();
   }
 
   connect() {
     try {
-      this.#port = chrome.runtime.connect(this.extID);
+      this.#port = chrome.runtime.connect(this.name);
     } catch(e) {
       console.error(e);
       return false;
@@ -24,7 +24,7 @@ export class Port extends Disposable implements IPort {
 
     this.disposable = registerEventDisposable(this.#port!.onMessage, (msg: IMessageObject<any>, port) => {  
       if (this.onmessage) this.onmessage(msg, this); 
-      else console.error("No register port `onmessage` handler.", this.extID);
+      else console.error("No register port `onmessage` handler.", this.name);
     });
 
     this.disposable = registerEventDisposable(this.#port!.onDisconnect, (port) => {

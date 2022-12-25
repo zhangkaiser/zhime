@@ -1,36 +1,40 @@
-export type IChromeEvent = chrome.events.Event<any>;
+import { IPort } from "./port";
+
+export interface IRemoteMessageHandler {
+  handleMessage(msg: IMessageObject<any>): boolean;
+  verifyAuth(name: string, type: string): boolean;
+}
 
 
-export class Disposable extends EventTarget implements IDisposable {
+export class RemoteEventDispatcher {
 
-  #disposes = new Map<string | symbol, IDisposable>();
+  ports: IPort[] = [];
 
-  #currentEventName = "";
+  constructor(public controller: IRemoteMessageHandler) {
 
-  setCurrentEventName(value: string) {
-    this.#currentEventName = value;
   }
 
-  set disposable(disposable: IDisposable) {
-    if (this.#currentEventName) {
-      if (this.#disposes.has(this.#currentEventName)) {
-        let oldDisposable = this.#disposes.get(this.#currentEventName);
-        oldDisposable?.dispose();
-      }
-      this.#disposes.set(this.#currentEventName, disposable);
-      this.setCurrentEventName("");
-    } else {
-      let key = Symbol("event");
-      this.#disposes.set(key, disposable);
-    }
+  add(port: IPort) {
+    this.ports.push(port);
   }
 
-  dispose() {
-    this.#disposes.forEach((item) => {
-      item.dispose();
+  connects() {
+    this.ports.forEach((item) => item.connect());
+  }
+
+  dispatch(type: string, value: any[]) {
+    
+    let msg = {data: {type, value}};
+    this.ports.forEach((item) => {
+      if (!this.controller.verifyAuth(item.name, type)) return;
+      item.postMessage(msg);
+    })
+  }
+
+  disposes() {
+    this.ports.forEach((port) => {
+      port.disconnect();
     });
-
-    this.#disposes.clear();
   }
 
 }

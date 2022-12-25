@@ -2,7 +2,7 @@
 import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
 import { IIMEType, imeEventList } from "src/consts/chromeosIME";
-import { Disposable } from "src/api/common/event";
+import { Disposable } from "src/api/common/disposable";
 
 class Main extends Disposable {
 

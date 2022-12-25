@@ -1,5 +1,7 @@
 
-export class LocalStorage {
+import { ILocalStorage } from "src/api/common/storage";
+
+export class LocalStorage implements ILocalStorage {
   set<T extends keyof ILocalStorageTable>(key: T, value: ILocalStorageTable[T]) {
     chrome.storage.local.set({
       [key]: value

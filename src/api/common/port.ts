@@ -1,6 +1,9 @@
 
 
 export interface IPort {
+
+  name: string;
+
   connect: () => boolean;
   reconnect: () => boolean;
 
