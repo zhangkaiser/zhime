@@ -1,21 +1,18 @@
 
 
+export interface IPort {
+  connect: () => boolean;
+  reconnect: () => boolean;
 
-export class Port {
-  constructor() {
+  postMessage: (value: IMessageObject<any>) => boolean;
 
-  }
+  disconnect: () => void;
 
-  postMessage() {
+  onmessage?: (msg: IMessageObject<any>, port: IPort) => void;
+  ondisconnect?: (port: IPort) => void;
 
-  }
-
-  addListener() {
-
-  } 
 }
 
-
-export class BrowserExtPort {
-  
+export interface IPortConstructor {
+  new (name: string): IPort;
 }

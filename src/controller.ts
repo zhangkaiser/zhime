@@ -1,6 +1,6 @@
-import { IMEControllerEventInterface } from "src/api/common/imecontroller";
+import { IMEControllerEventInterface } from "src/consts/chromeosIME";
 import { IViewModel, ViewModel } from "src/api/common/viewmodel";
-import { ChromeOSViewModel } from "src/api/chromeos/viewModel";
+import { ChromeOSViewModel } from "src/viewmodel/chromeos";
 
 export class Controller extends EventTarget implements IMEControllerEventInterface {
 
@@ -14,6 +14,10 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
     } else {
       this.viewModel = new ViewModel;
     }
+  }
+
+  onInstalled(details: chrome.runtime.InstalledDetails) {
+    
   }
   
   onActivate(engineID: string, screen: string) {
