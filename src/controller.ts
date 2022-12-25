@@ -1,6 +1,7 @@
 import { IMEControllerEventInterface } from "src/consts/chromeosIME";
 import { IViewModel, ViewModel } from "src/api/common/viewmodel";
 import { ChromeOSViewModel } from "src/viewmodel/chromeos";
+import { IEnv } from "src/api/common/env";
 
 export class Controller extends EventTarget implements IMEControllerEventInterface {
 

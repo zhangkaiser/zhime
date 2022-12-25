@@ -24,7 +24,7 @@ class Main extends Disposable {
     // For option page UI.
     this.setCurrentEventName("onMessage");
     this.disposable = registerEvent(runtime.onMessage, (message, sender, sendResponse) => {
-
+      
     });
 
     this.disposable = registerEvent(runtime.onInstalled, (details) => {

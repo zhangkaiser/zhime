@@ -1,6 +1,6 @@
+import { IDisposable } from "./disposable";
 
-
-export interface IPort {
+export interface IPort extends IDisposable {
 
   name: string;
 

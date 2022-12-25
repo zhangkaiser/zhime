@@ -1,5 +1,5 @@
 
-import { ILocalStorage } from "src/api/common/storage";
+import { ILocalStorage, ILocalStorageTable } from "src/api/common/storage";
 
 export class LocalStorage implements ILocalStorage {
   set<T extends keyof ILocalStorageTable>(key: T, value: ILocalStorageTable[T]) {

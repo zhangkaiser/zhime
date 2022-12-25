@@ -1,4 +1,8 @@
 
+export interface IDisposable {
+  dispose: () => void;
+}
+
 export class Disposable extends EventTarget implements IDisposable {
 
   #disposes = new Map<string | symbol, IDisposable>();
@@ -7,6 +11,14 @@ export class Disposable extends EventTarget implements IDisposable {
 
   setCurrentEventName(value: string) {
     this.#currentEventName = value;
+  }
+
+  getDisposable(key: string) {
+    return this.#disposes.get(key);
+  }
+
+  getDisposables() {
+    return this.#disposes;
   }
 
   set disposable(disposable: IDisposable) {
@@ -27,8 +39,18 @@ export class Disposable extends EventTarget implements IDisposable {
     this.#disposes.forEach((item) => {
       item.dispose();
     });
+  }
 
-    this.#disposes.clear();
+  static delete(disposes: Map<string | symbol, IDisposable>, key: string) {
+    disposes.delete(key);
+  }
+
+  static clear(disposes: Map<string | symbol, IDisposable>) {
+    disposes.clear();
+  }
+  
+  static dispose(disposes: Map<string | symbol, IDisposable>, key: string) {
+    disposes.get(key)?.dispose();
   }
 
 }

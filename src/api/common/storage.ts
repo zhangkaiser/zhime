@@ -1,3 +1,10 @@
+export interface IStorageGlobalState {
+
+}
+
+export interface ILocalStorageTable {
+  global_state: IStorageGlobalState
+}
 
 export interface ILocalStorage {
   set<T extends keyof ILocalStorageTable>(key: T, value: ILocalStorageTable[T]): void;
