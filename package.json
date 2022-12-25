@@ -4,7 +4,7 @@
   "description": "Chrome OS IME,Browser Extension IME UI,VScode Simple IME.",
   "main": "index.js",
   "scripts": {
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --require ts-node/register"
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --require ts-node/register --extension ts"
   },
   "repository": {
     "type": "git",
