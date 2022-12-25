@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "src/*": [
+        "./src/*"
+      ]
+    },
+    "module": "commonjs",
+    "removeComments": true,
+    "lib": [
+      "DOM", "WebWorker", "DOM.Iterable", "ESNEXT"
+    ],
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "outDir": "./out",
+    "esModuleInterop": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "alwaysStrict": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src",
+    "test",
+    "types"
+  ]
+}
