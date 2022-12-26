@@ -1,5 +1,5 @@
 import { IDisposable } from "./disposable";
-import { IMessageObject } from "./message";
+import { IMessageObjectType } from "./message";
 
 export interface IPort extends IDisposable {
 
@@ -8,11 +8,11 @@ export interface IPort extends IDisposable {
   connect: () => boolean;
   reconnect: () => boolean;
 
-  postMessage: (value: IMessageObject<any>) => boolean;
+  postMessage: (value: IMessageObjectType) => boolean;
 
   disconnect: () => void;
 
-  onmessage?: (msg: IMessageObject<any>, port: IPort) => void;
+  onmessage?: (msg: IMessageObjectType, port: IPort) => void;
   ondisconnect?: (port: IPort) => void;
 
 }

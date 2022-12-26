@@ -1,16 +1,17 @@
 import { Disposable } from "src/api/common/disposable";
-import { IMessageObject } from "./message";
 import { IPort } from "./port";
 
-export interface IRemoteMessageHandler {
-  handleMessage(msg: IMessageObject<any>): boolean;
-  verifyAuth(name: string, type: string): boolean;
-
+export interface IEventDispatcherHandler {
+  verifyAuth?(name: string, type: string): boolean;
 }
 
-export class RemoteEventDispatcher extends Disposable {
+export interface IEventDispatcher {
+  dispatchMessage(type: string, value: any[]): boolean[];
+}
 
-  constructor(public handler: IRemoteMessageHandler) {
+export class RemoteEventDispatcher extends Disposable implements IEventDispatcher {
+
+  constructor(public handler: IEventDispatcherHandler = {}) {
     super();
   }
 
@@ -23,20 +24,33 @@ export class RemoteEventDispatcher extends Disposable {
     this.disposable = port;
   }
 
-  connects() {
-    this.ports.forEach((item) => (item as IPort).connect());
-  }
+  // connects() {
+  //   this.ports.forEach((item) => (item as IPort).connect());
+  // }
 
-  dispatch(type: string, value: any[]) {
+  dispatchMessage(type: string, value: any[]) {
     let msg = {data: {type, value}};
+    let status: boolean[] = [];
     this.ports.forEach((item) => {
-      if (!this.handler.verifyAuth(item.name, type)) return;
-      item.postMessage(msg);
+      if (this.handler.verifyAuth && !this.handler.verifyAuth(item.name, type)) {
+        status.push(false);
+        return ;
+      }
+
+      if (item.postMessage(msg)) status.push(true);
+      else status.push(false);
     });
+    return status;
   }
 
-  dispose() {
-    this.ports.forEach((port) => port.disconnect());
-  }
+  // dispose() {
+  //   this.ports.forEach((port) => port.disconnect());
+  // }
 
+}
+
+export class EventDispatcher extends Disposable implements IEventDispatcher {
+  dispatchMessage(type: string, value: any[]) {
+    return [true];
+  }
 }

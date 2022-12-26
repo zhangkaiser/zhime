@@ -1,6 +1,7 @@
-import { Disposable } from "src/api/common/disposable";
 
 import { expect } from "chai";
+
+import { Disposable } from "src/api/common/disposable";
 
 const disposeDemo = {
   name: "hello",
