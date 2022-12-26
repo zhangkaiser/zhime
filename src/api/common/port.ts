@@ -1,4 +1,5 @@
 import { IDisposable } from "./disposable";
+import { IMessageObject } from "./message";
 
 export interface IPort extends IDisposable {
 

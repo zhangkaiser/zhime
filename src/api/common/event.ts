@@ -1,4 +1,5 @@
 import { Disposable } from "src/api/common/disposable";
+import { IMessageObject } from "./message";
 import { IPort } from "./port";
 
 export interface IRemoteMessageHandler {

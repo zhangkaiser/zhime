@@ -13,6 +13,11 @@ export const imeEventList = [
   "onSurroundingTextChanged"
 ]
 
+export type IIMEEventUnion = 
+  "onActivate" | "onAssistiveWindowButtonClicked" | "onBlur" |
+  "onCandidateClicked" | "onDeactivated" | "onFocus"| "onInputContextUpdate" | 
+  "onReset" | "onSurroundingTextChanged" | "onKeyEvent" | "onMenuItemActivated";
+
 export const imeMethodList = [
   "clearComposition",
   "commitText",
@@ -31,6 +36,9 @@ export const imeMethodList = [
 ]
 
 export type IIMEType = keyof typeof chrome.input.ime;
+export type IIMEMethodUnion = Exclude<IIMEType, IIMEEventUnion>;
+
+export type IMEMethodInterface = Omit<typeof chrome.input.ime, IIMEEventUnion>
 
 export type IIMEController = Record<IIMEType, Function>;
 

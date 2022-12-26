@@ -1,10 +1,10 @@
 
 
-interface IMessageTypeTable {
-  a: string
+export interface IMessageTypeTable {
+  test: string
 }
 
-interface IMessageObject<T extends keyof IMessageTypeTable> {
+export interface IMessageObject<T extends keyof IMessageTypeTable> {
   extID?: string,
   cb?: (response: any) => void,
   data: {

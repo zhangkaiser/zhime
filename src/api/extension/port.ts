@@ -1,6 +1,7 @@
 import { IPort, IPortConstructor } from "src/api/common/port";
 import { registerEventDisposable } from "src/api/extension/event";
 import { Disposable } from "src/api/common/disposable";
+import { IMessageObject } from "src/api/common/message";
 
 export class Port extends Disposable implements IPort {
 

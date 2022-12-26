@@ -1,19 +1,19 @@
 import { IMEControllerEventInterface } from "src/consts/chromeosIME";
-import { IViewModel, ViewModel } from "src/api/common/viewmodel";
-import { ChromeOSViewModel } from "src/viewmodel/chromeos";
-import { IEnv } from "src/api/common/env";
+import { IModel, BaseModel } from "src/model/base";
+import { ChromeOSModel } from "src/model/chromeos";
+import { IEnv } from "src/consts/env";
 
 export class Controller extends EventTarget implements IMEControllerEventInterface {
 
-  viewModel: IViewModel;
+  model: IModel;
 
   constructor(public env: IEnv) {
     super();
 
     if (env == "chromeos") {
-      this.viewModel = new ChromeOSViewModel;
+      this.model = new ChromeOSModel;
     } else {
-      this.viewModel = new ViewModel;
+      this.model = new BaseModel;
     }
   }
 
@@ -22,46 +22,46 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
   }
   
   onActivate(engineID: string, screen: string) {
-    this.viewModel.engineID = engineID;
-    this.viewModel.notifyUpdate("onActivate", [engineID, screen]);
+    this.model.engineID = engineID;
+    this.model.notifyUpdate("onActivate", [engineID, screen]);
   }
 
   onDeactivated(engineID: string) {
-    this.viewModel.notifyUpdate("onDeactivated", [engineID]);
+    this.model.notifyUpdate("onDeactivated", [engineID]);
   }
 
   onReset(engineID: string) {
-    this.viewModel.notifyUpdate("onReset", [engineID]);
+    this.model.notifyUpdate("onReset", [engineID]);
   }
 
   onBlur(contextID: number) {
-    this.viewModel.notifyUpdate("noBlur", [contextID]);
+    this.model.notifyUpdate("noBlur", [contextID]);
   }
 
   onFocus(context: chrome.input.ime.InputContext) {
-    this.viewModel.notifyUpdate("onFocus", [context]);
+    this.model.notifyUpdate("onFocus", [context]);
   }
 
   onKeyEvent(engineID: string, keyData: KeyboardEvent, requestId: string) {
-    this.viewModel.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
+    this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
     return false;
     
   }
 
   onCandidateClicked(engineID: string, candidateID: number, button: "left" | "middle" | "right") {
-    this.viewModel.notifyUpdate("onCandidateClicked", [engineID, candidateID, button]);
+    this.model.notifyUpdate("onCandidateClicked", [engineID, candidateID, button]);
   }
 
   onInputContextUpdate(context: chrome.input.ime.InputContext) {
-    this.viewModel.notifyUpdate("onInputContextUpdate", [context]);
+    this.model.notifyUpdate("onInputContextUpdate", [context]);
   }
 
   onSurroundingTextChanged(engineID: string, surroundingInfo: chrome.input.ime.SurroundingTextInfo) {
-    this.viewModel.notifyUpdate("onSurroundingTextChanged", [engineID, surroundingInfo]);
+    this.model.notifyUpdate("onSurroundingTextChanged", [engineID, surroundingInfo]);
   }
 
   onMenuItemActivated(engineID: string, name: string) {
-    this.viewModel.notifyUpdate("onMenuItemActivated", [engineID, name]);
+    this.model.notifyUpdate("onMenuItemActivated", [engineID, name]);
   }
   
 }

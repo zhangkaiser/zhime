@@ -1,4 +1,4 @@
-export interface IViewModel extends EventTarget {
+export interface IModel extends EventTarget {
   
   engineID: string;
   contextID: number;
@@ -7,7 +7,7 @@ export interface IViewModel extends EventTarget {
 
 }
 
-export class ViewModel extends EventTarget implements IViewModel {
+export class BaseModel extends EventTarget implements IModel {
   engineID: string = "Test";
   contextID: number = 0;
 
