@@ -1,14 +1,8 @@
-export interface IStorageGlobalState {
 
-}
 
-export interface ILocalStorageTable {
-  global_state: IStorageGlobalState
-}
-
-export interface ILocalStorage {
-  set<T extends keyof ILocalStorageTable>(key: T, value: ILocalStorageTable[T]): void;
-  get<T extends keyof ILocalStorageTable>(key: T | T[]): Promise<Record<T, ILocalStorageTable[T]> | null | undefined>;
+export interface ILocalStorage<T extends Object> {
+  set<K extends keyof T>(key: K, value: T[K]): void;
+  get<K extends keyof T>(key: K | K[]): Promise<Record<K, T[K]> | null | undefined>;
   clear(): void;
-  remove<T extends keyof ILocalStorageTable>(key: T | T[]): void;
+  remove<K extends keyof T>(key: K | K[]): void;
 }

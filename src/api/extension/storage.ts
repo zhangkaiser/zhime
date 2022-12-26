@@ -1,22 +1,22 @@
 
-import { ILocalStorage, ILocalStorageTable } from "src/api/common/storage";
+import { ILocalStorage } from "src/api/common/storage";
 
-export class LocalStorage implements ILocalStorage {
-  set<T extends keyof ILocalStorageTable>(key: T, value: ILocalStorageTable[T]) {
+export class LocalStorage<T extends Object> implements ILocalStorage<T> {
+  set<K extends keyof T>(key: K, value: T[K]) {
     chrome.storage.local.set({
       [key]: value
     });
   }
 
-  async get<T extends keyof ILocalStorageTable>(key: T | T[]): Promise<Record<T, ILocalStorageTable[T]> | null | undefined> {
-    return chrome.storage.local.get(key) as Promise<Record<T, ILocalStorageTable[T]> | null | undefined>;
+  get<K extends keyof T>(key: K | K[]):Promise<Record<K, T[K]> | null | undefined> {
+    return chrome.storage.local.get(key as string) as any;
   }
 
   clear() {
     chrome.storage.local.clear();
   }
 
-  remove<T extends keyof ILocalStorageTable>(key: T | T[]) {
-    chrome.storage.local.remove(key);
+  remove<K extends keyof T>(key: K | K[]) {
+    chrome.storage.local.remove(key as any);
   }
 }
