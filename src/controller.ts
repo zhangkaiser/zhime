@@ -3,9 +3,22 @@ import { IModel, BaseModel } from "src/model/base";
 import { ChromeOSModel } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
 
+type ActionType = [
+  "keydown" | "keyup",
+  [boolean, boolean, boolean], // Modifiers [Control, Shift, Alt].
+  string | RegExp, // KeyCode / KeyChar / RegExp.
+  null, // status. 
+  Function | null, // Condition function.
+  Function, // Action function.
+  Object, // Action function scope
+  any // action function args.
+];
+
 export class Controller extends EventTarget implements IMEControllerEventInterface {
 
   model: IModel;
+
+  #keyActionTable: ActionType[] = [];
 
   constructor(public env: IEnv) {
     super();
@@ -19,10 +32,11 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
 
   onInstalled(details: chrome.runtime.InstalledDetails) {
     
-  }
+  } 
   
   onActivate(engineID: string, screen: string) {
     this.model.engineID = engineID;
+    this.#keyActionTable = this.getKeyActionTable();
     this.model.notifyUpdate("onActivate", [engineID, screen]);
   }
 
@@ -42,7 +56,15 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
     this.model.notifyUpdate("onFocus", [context]);
   }
 
-  onKeyEvent(engineID: string, keyData: KeyboardEvent, requestId: string) {
+  onKeyEvent(engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) {
+    if (this.preProcessKey(keyData)) {
+      return true;
+    }
+
+    if (this.#keyActionTable && this.handleKeyInActionTable(keyData, this.#keyActionTable)) {
+      return true;
+    }
+
     this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
     return false;
     
@@ -62,6 +84,18 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
 
   onMenuItemActivated(engineID: string, name: string) {
     this.model.notifyUpdate("onMenuItemActivated", [engineID, name]);
+  }
+
+  preProcessKey(keyData: chrome.input.ime.KeyboardEvent) {
+    return false;
+  }
+
+  handleKeyInActionTable(keyData: chrome.input.ime.KeyboardEvent, table: ActionType[]) {
+    return false;
+  }
+
+  getKeyActionTable(): ActionType[] {
+    return [];
   }
   
 }

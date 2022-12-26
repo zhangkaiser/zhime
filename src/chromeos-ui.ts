@@ -56,8 +56,10 @@ class Main extends Disposable {
     });
 
     this.setCurrentEventName("onKeyEvent");
-    this.disposable = registerEvent(ime.onKeyEvent, ((engineID: any, keyData: any, requestId: any) => {
-      this.controller.onKeyEvent(engineID, keyData, requestId);
+    this.disposable = registerEvent(ime.onKeyEvent, ((engineID: any, keyData: any, requestId: any): any => {
+      if (this.controller.onKeyEvent(engineID, keyData, requestId)){
+        return true;
+      }
     }) as any);
 
     this.setCurrentEventName("onSurroundingTextChanged");
