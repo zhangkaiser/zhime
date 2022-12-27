@@ -2,6 +2,10 @@ import { IMEControllerEventInterface } from "src/consts/chromeosIME";
 import { IModel, BaseModel } from "src/model/base";
 import { ChromeOSModel } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
+import { Disposable } from "src/api/common/disposable";
+import { IDataModel } from "src/model/datamodel";
+import { View } from "./view/view";
+import { IView } from "./view/base";
 
 type ActionType = [
   "keydown" | "keyup",
@@ -14,9 +18,10 @@ type ActionType = [
   any // action function args.
 ];
 
-export class Controller extends EventTarget implements IMEControllerEventInterface {
+export class Controller extends Disposable implements IMEControllerEventInterface {
 
   model: IModel;
+  view: IView = new View;
 
   #keyActionTable: ActionType[] = [];
 
@@ -28,6 +33,10 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
     } else {
       this.model = new BaseModel;
     }
+  }
+
+  setState() {
+    
   }
 
   onInstalled(details: chrome.runtime.InstalledDetails) {
@@ -96,6 +105,15 @@ export class Controller extends EventTarget implements IMEControllerEventInterfa
 
   getKeyActionTable(): ActionType[] {
     return [];
+  }
+
+  setData(newData: IDataModel, isRender: boolean = true) {
+    if (isRender && this.view) {
+      this.view.data = newData;
+      return;
+    }
+
+    this.model.data = newData;
   }
   
 }

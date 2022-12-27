@@ -4,12 +4,10 @@ import { registerEventDisposable as registerEvent } from "src/api/extension/even
 import { IIMEType, imeEventList } from "src/consts/chromeosIME";
 import { Disposable } from "src/api/common/disposable";
 
-class Main extends Disposable {
-
-  controller: Controller = new Controller("chromeos");
+class Main extends Controller {
 
   constructor() {
-    super();
+    super("chromeos");
   }
 
   registerRuntimeEvent() {
@@ -27,45 +25,29 @@ class Main extends Disposable {
       
     });
 
-    this.disposable = registerEvent(runtime.onInstalled, (details) => {
-      this.controller.onInstalled(details);
-    });
+    this.disposable = registerEvent(runtime.onInstalled, this.onInstalled.bind(this));
 
   }
 
   registerIMEEvent() {
     const ime = chrome.input.ime;
 
-    this.disposable = registerEvent(ime.onActivate, (engineID, screen) => {
-      this.controller.onActivate(engineID, screen);
-    });
-    this.disposable = registerEvent(ime.onDeactivated, (engineID) => {
-      this.controller.onDeactivated(engineID)
-    });
-    this.disposable = registerEvent(ime.onFocus, (context) => {
-      this.controller.onFocus(context);
-    });
-    this.disposable = registerEvent(ime.onBlur, (contextID) => {
-      this.controller.onBlur(contextID);
-    });
-    this.disposable = registerEvent(ime.onCandidateClicked, (engineID, candidateID, button) => {
-      this.controller.onCandidateClicked(engineID, candidateID, button as any);
-    });
-    this.disposable = registerEvent(ime.onReset, (engineID) => {
-      this.controller.onReset(engineID)
-    });
+    this.disposable = registerEvent(ime.onActivate, this.onActivate.bind(this));
+    this.disposable = registerEvent(ime.onDeactivated, this.onDeactivated.bind(this));
+    this.disposable = registerEvent(ime.onFocus, this.onFocus.bind(this));
+    this.disposable = registerEvent(ime.onBlur, this.onBlur.bind(this));
+    this.disposable = registerEvent(ime.onCandidateClicked, this.onCandidateClicked.bind(this));
+    this.disposable = registerEvent(ime.onReset, this.onReset.bind(this));
 
     this.setCurrentEventName("onKeyEvent");
     this.disposable = registerEvent(ime.onKeyEvent, ((engineID: any, keyData: any, requestId: any): any => {
-      if (this.controller.onKeyEvent(engineID, keyData, requestId)){
+      if (this.onKeyEvent(engineID, keyData, requestId)){
         return true;
       }
     }) as any);
 
     this.setCurrentEventName("onSurroundingTextChanged");
-    this.disposable = registerEvent(ime.onSurroundingTextChanged, (engineID, surroundingInfo) => {
-      this.controller.onSurroundingTextChanged(engineID, surroundingInfo)
-    });
+    this.disposable = registerEvent(ime.onSurroundingTextChanged, this.onSurroundingTextChanged.bind(this));
   }
 
   addIMEControlerMethodDispatcher() {

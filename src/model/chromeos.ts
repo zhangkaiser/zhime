@@ -1,5 +1,4 @@
 import { IMEMethodInterface } from "src/consts/chromeosIME";
-import { ChromeOSView } from "src/viewmodel/chromeos";
 import { IModel } from "./base";
 
 export class ChromeOSModel extends EventTarget implements IModel {
@@ -12,10 +11,6 @@ export class ChromeOSModel extends EventTarget implements IModel {
   get engineID() {
     return this.#engineID;
   }
-
-  view = new ChromeOSView;
-
-  
 
   // constructor() {
   //   super();
