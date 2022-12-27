@@ -1,2 +1,5 @@
 
 
+module globalThis {
+  jsdom: JSDOM
+}
