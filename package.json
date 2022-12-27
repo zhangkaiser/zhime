@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/chai": "^4.3.4",
     "@types/chrome": "^0.0.206",
+    "@types/jsdom": "^20.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.17",
     "@types/vscode": "^1.74.0",

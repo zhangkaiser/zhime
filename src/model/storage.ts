@@ -3,12 +3,15 @@ import { ILocalStorageConstructor, LocalStorage } from "src/api/common/storage";
 /**
  * Global state storage interface.
  */
-interface IGlobalState {
-
-  decoder: string;
+export interface IGlobalState {
+  readonly decoder: string;
 }
 
-interface IDecoderItemModel {
+export const defaultGlobalState = {
+  decoder: ""
+}
+
+export interface IDecoderItemModel {
 
 }
 

@@ -3,6 +3,11 @@ import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
 import { IIMEType, imeEventList } from "src/consts/chromeosIME";
 import { Disposable } from "src/api/common/disposable";
+import { ChromeOSProxy } from "src/viewmodel/chromeos-proxy";
+import { IMessageObjectType } from "src/api/common/message";
+import { LocalStorage } from "src/api/extension/storage";
+import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
+
 
 class Main extends Controller {
 
@@ -10,26 +15,44 @@ class Main extends Controller {
     super("chromeos");
   }
 
-  registerRuntimeEvent() {
+  async initialize() {
+    let globalState = await storageInstance.get("global_state");
+    if (globalState && globalState['global_state']) {
+      this.model.globalState = globalState['global_state'];
+    } else {
+      this.openOptionsPage();
+    }
+  }
+
+  registerSelfEvents() {
+
+  }
+
+  registerModelEvents() {
+
+  }
+
+  registerRuntimeEvents() {
     const runtime = chrome.runtime;
 
-    // Register other IME UI. eg. virtual keyboard, linux(crostini).
+    // Register other IME UI proxy. eg. virtual keyboard, linux(crostini).
     this.setCurrentEventName("onConnectExternal");
     this.disposable = registerEvent(runtime.onConnectExternal, (port) => {
-      
+      // this.view = new ChromeOSProxy(port);
+      // How to register event Adapter ?
     });
 
     // For option page UI.
     this.setCurrentEventName("onMessage");
-    this.disposable = registerEvent(runtime.onMessage, (message, sender, sendResponse) => {
-      
+    this.disposable = registerEvent(runtime.onMessage, (message: IMessageObjectType, sender, sendResponse) => {
+
     });
 
     this.disposable = registerEvent(runtime.onInstalled, this.onInstalled.bind(this));
 
   }
 
-  registerIMEEvent() {
+  registerIMEEvents() {
     const ime = chrome.input.ime;
 
     this.disposable = registerEvent(ime.onActivate, this.onActivate.bind(this));
@@ -50,7 +73,33 @@ class Main extends Controller {
     this.disposable = registerEvent(ime.onSurroundingTextChanged, this.onSurroundingTextChanged.bind(this));
   }
 
+
   addIMEControlerMethodDispatcher() {
 
   }
+
+
+  handlereset() {
+
+  }
+
+  openOptionsPage() {
+    chrome.runtime.openOptionsPage();
+  }
+
+
+}
+
+
+async function main() {
+  setGlobalLocalStorageInstance(LocalStorage<any>);
+  
+  let controller = new Main();
+  await controller.initialize();
+
+  controller.registerSelfEvents();
+  controller.registerRuntimeEvents();
+  controller.registerIMEEvents();
+  controller.registerModelEvents();
+
 }

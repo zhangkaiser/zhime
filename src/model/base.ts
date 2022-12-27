@@ -1,4 +1,5 @@
 import { IDataModel } from "./datamodel";
+import { defaultGlobalState, IGlobalState } from "./storage";
 
 export interface IModel extends EventTarget {
   
@@ -7,6 +8,8 @@ export interface IModel extends EventTarget {
 
   data?: IDataModel;
 
+  globalState: IGlobalState;
+
   notifyUpdate: (eventName: string, value: any[]) => boolean;
 
 }
@@ -14,6 +17,8 @@ export interface IModel extends EventTarget {
 export class BaseModel extends EventTarget implements IModel {
   engineID: string = "Test";
   contextID: number = 0;
+
+  globalState = defaultGlobalState;
 
   #data: IDataModel = {};
 

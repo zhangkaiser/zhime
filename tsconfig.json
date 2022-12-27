@@ -4,6 +4,9 @@
     "paths": {
       "src/*": [
         "./src/*"
+      ],
+      "mock/*": [
+        "./test/mock/*"
       ]
     },
     "module": "commonjs",
