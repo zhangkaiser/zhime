@@ -61,4 +61,8 @@ export class Port extends Disposable implements IPort {
   disconnect() {
     this.#port?.disconnect();
   }
+
+  dispose() {
+    this.disconnect();
+  }
 }

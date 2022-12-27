@@ -1,0 +1,28 @@
+{
+  "name": "ZHIME",
+  "version": "0.0.1",
+  "description": "Chrome OS IME Proxy.",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "input",
+    "unlimitedStorage",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://zhime.pinquapp.com/?*"
+  ],
+  "input_components": [
+    {
+      "name": "ZHIME",
+      "type": "ime",
+      "id": "zhime",
+      "description": "Chrome OS IME Proxy.",
+      "language": "zh",
+      "layouts": ["us"]
+    }
+  ],
+  "options_page": "options.html"
+}

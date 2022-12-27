@@ -47,6 +47,10 @@ export class RemoteEventDispatcher extends Disposable implements IEventDispatche
   //   this.ports.forEach((port) => port.disconnect());
   // }
 
+  [Symbol.toStringTag]() {
+    return "RemoteEventDispatcher";
+  }
+
 }
 
 export class EventDispatcher extends Disposable implements IEventDispatcher {

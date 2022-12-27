@@ -41,16 +41,16 @@ export class Disposable extends EventTarget implements IDisposable {
     });
   }
 
-  static delete(disposes: Map<string | symbol, IDisposable>, key: string) {
-    disposes.delete(key);
+  static delete(disposable: Disposable, key: string) {
+    disposable.getDisposables().delete(key);
   }
 
-  static clear(disposes: Map<string | symbol, IDisposable>) {
-    disposes.clear();
+  static clear(disposeable: Disposable) {
+    disposeable.getDisposables().clear();
   }
   
-  static dispose(disposes: Map<string | symbol, IDisposable>, key: string) {
-    disposes.get(key)?.dispose();
+  static dispose(disposeable: Disposable, key: string) {
+    disposeable.getDisposables().get(key)?.dispose();
   }
 
 }

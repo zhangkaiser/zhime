@@ -1,12 +1,11 @@
 
 import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
-import { IIMEType, imeEventList } from "src/consts/chromeosIME";
-import { Disposable } from "src/api/common/disposable";
 import { ChromeOSProxy } from "src/viewmodel/chromeos-proxy";
 import { IMessageObjectType } from "src/api/common/message";
 import { LocalStorage } from "src/api/extension/storage";
 import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
+import { ChromeOSView } from "./view/chromeos";
 
 
 class Main extends Controller {
@@ -87,7 +86,6 @@ class Main extends Controller {
     chrome.runtime.openOptionsPage();
   }
 
-
 }
 
 
@@ -95,6 +93,7 @@ async function main() {
   setGlobalLocalStorageInstance(LocalStorage<any>);
   
   let controller = new Main();
+  controller.view = new ChromeOSView();
   await controller.initialize();
 
   controller.registerSelfEvents();
@@ -103,3 +102,4 @@ async function main() {
   controller.registerModelEvents();
 
 }
+main();

@@ -1,6 +1,6 @@
-import { IMEControllerEventInterface } from "src/consts/chromeosIME";
+import { IMEControllerEventInterface, imeMethodList } from "src/consts/chromeosIME";
 import { IModel, BaseModel } from "src/model/base";
-import { ChromeOSModel } from "src/model/chromeos";
+import { ChromeOSModel, IIMEMethodRenderDetail } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
 import { Disposable } from "src/api/common/disposable";
 import { IDataModel } from "src/model/datamodel";
@@ -21,7 +21,7 @@ type ActionType = [
 export class Controller extends Disposable implements IMEControllerEventInterface {
 
   model: IModel;
-  view: IView = new View;
+  view: IView = new View();
 
   #keyActionTable: ActionType[] = [];
 
@@ -30,9 +30,12 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
 
     if (env == "chromeos") {
       this.model = new ChromeOSModel;
+      this.model.addEventListener("onmessage", this.handleModelMessage.bind(this))
+
     } else {
       this.model = new BaseModel;
     }
+
   }
 
   setState() {
@@ -47,6 +50,7 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     this.model.engineID = engineID;
     this.#keyActionTable = this.getKeyActionTable();
     this.model.notifyUpdate("onActivate", [engineID, screen]);
+    this.model.reset();
   }
 
   onDeactivated(engineID: string) {
@@ -114,6 +118,19 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     }
 
     this.model.data = newData;
+  }
+
+  handleModelMessage(e: Event) {
+    let [msg, port, render] = (e as CustomEvent<IIMEMethodRenderDetail>).detail;
+    let {type, value} = msg.data;
+    console.log("handleModelMessage", type, value);
+
+    if (imeMethodList.indexOf(type) !== -1) {
+      this.setData({[type]: value[0]}, render);
+    } else {
+      console.error("Not handler", type, value);
+    }
+
   }
   
 }

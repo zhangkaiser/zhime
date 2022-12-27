@@ -20,7 +20,7 @@ describe("class Disposable", function() {
       instance.disposable = disposeDemo;
       expect(disposables.size).to.be.gt(0);
       
-      Disposable.clear(disposables);
+      Disposable.clear(instance);
       expect(disposables.size).to.be.equal(0);
 
       instance.setCurrentEventName("hello");
@@ -34,7 +34,7 @@ describe("class Disposable", function() {
       expect(disposable).to.be.equal(disposeDemo);
       expect((disposable as any).name).to.be.empty;
 
-      Disposable.delete(disposables, "hello");
+      Disposable.delete(instance, "hello");
       expect(disposables.size).to.be.equal(1);
       expect(instance.getDisposable("hello")).to.be.undefined;
 
