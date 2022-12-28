@@ -71,10 +71,12 @@ export class ChromeOSModel extends Disposable implements IModel {
 
     this.focusAction = () => {
       this.#intervalID = setInterval(() => {
+        if (process.env.DEV) console.log("focusAction.");
         decoderPort.reconnect();
       }, ChromeOSModel.RECONNECT_TIMEOUT) as any;
     }
     this.blurAction = () => {
+      if(process.env.DEV) console.log("blurAction.");
       clearInterval(this.#intervalID);
     }
 

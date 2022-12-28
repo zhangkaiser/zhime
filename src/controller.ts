@@ -84,7 +84,12 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
       return true;
     }
 
-    this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
+    if (this.isAllowNotifyKeyEvent(keyData)) {
+      this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
+    } else {
+      this.setData({ "keyEventHandled": [requestId, false] });
+    }
+
     return false; 
   }
 
@@ -112,6 +117,14 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     return false;
   }
 
+  isAllowNotifyKeyEvent(keyData: chrome.input.ime.KeyboardEvent) {
+    if (keyData.type === "keydown") return true;
+
+    if (["Ctrl", "Shift", "Alt"].indexOf(keyData.key) === -1) return false;
+
+    return true;
+  }
+ 
   getKeyActionTable(): ActionType[] {
 
     let isPureModifiers = () => {
