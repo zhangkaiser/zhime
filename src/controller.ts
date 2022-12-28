@@ -3,19 +3,22 @@ import { IModel, BaseModel } from "src/model/base";
 import { ChromeOSModel, IIMEMethodRenderDetail } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
 import { Disposable } from "src/api/common/disposable";
-import { IDataModel } from "src/model/datamodel";
-import { View } from "./view/view";
-import { IView } from "./view/base";
+import { PartialViewDataModel } from "src/model/datamodel";
+import { View } from "src/view/view";
+import { IView } from "src/view/base";
+import { KeyRexExp, Status } from "src/model/consts";
+
 
 type ActionType = [
   "keydown" | "keyup",
   [boolean, boolean, boolean], // Modifiers [Control, Shift, Alt].
   string | RegExp, // KeyCode / KeyChar / RegExp.
-  null, // status. 
+  Status | null, // status.
+  boolean, // return.
   Function | null, // Condition function.
   Function, // Action function.
   Object, // Action function scope
-  any // action function args.
+  any[] // action function args.
 ];
 
 export class Controller extends Disposable implements IMEControllerEventInterface {
@@ -110,16 +113,55 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   }
 
   getKeyActionTable(): ActionType[] {
+
+    let isPureModifiers = () => {
+
+    }
+
+    let list: ActionType[] = [];
+    // Esc key.
+    list.push(["keyup", [false, false, false], "Esc", null, false, null, this.hideIME, this, []]);
+    // 
+    list.push(["keydown", [false, false, true], " ", Status.INITED, true, null, this.handleIMESwitchKey1, this, []]);
+
+    list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
+    list.push(["keyup", [true, false, false], "Shift", Status.INITED, false, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
+    
     return [];
   }
 
-  setData(newData: IDataModel, isRender: boolean = true) {
+  setData(newData: PartialViewDataModel, isRender: boolean = true) {
     if (isRender && this.view) {
       this.view.data = newData;
       return;
     }
 
     this.model.data = newData;
+  }
+
+  hideIME() {
+    if (this.model.focus) {
+      this.setData({
+        setCandidateWindowProperties: {
+          engineID: this.model.engineID,
+          properties: { visible: false }
+        },
+        clearComposition: {
+          contextID: this.model.contextID
+        },
+        hideInputView: true
+      });
+    }
+  }
+
+  /** Alt + Space */
+  handleIMESwitchKey1() {
+
+  }
+
+  /** Control + Shift */
+  handleIMESwitchKey2() {
+
   }
 
   handleModelMessage(e: Event) {

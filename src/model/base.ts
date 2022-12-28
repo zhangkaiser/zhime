@@ -1,4 +1,4 @@
-import { IDataModel } from "./datamodel";
+import { PartialViewDataModel } from "./datamodel";
 import { defaultGlobalState, IGlobalState } from "./storage";
 
 export interface IModel extends EventTarget {
@@ -8,7 +8,7 @@ export interface IModel extends EventTarget {
 
   focus: boolean;
 
-  data?: IDataModel;
+  data?: PartialViewDataModel;
 
   globalState: IGlobalState;
 
@@ -27,9 +27,9 @@ export class BaseModel extends EventTarget implements IModel {
 
   globalState = defaultGlobalState;
 
-  #data: IDataModel = {};
+  #data: PartialViewDataModel = {};
 
-  set data(value: IDataModel) {
+  set data(value: PartialViewDataModel) {
     this.#data = value;
   }
 
