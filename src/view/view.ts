@@ -1,6 +1,6 @@
-import { IDataModel } from "src/model/datamodel";
+import { PartialViewDataModel } from "src/model/datamodel";
 
 export class View {
-  data: IDataModel = {};
+  data: PartialViewDataModel = {};
   
 }
