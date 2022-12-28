@@ -4,32 +4,54 @@ import { Disposable } from "src/api/common/disposable";
 import { IPort } from "src/api/common/port";
 import { Port } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
-import { IModel } from "./base";
+import { BaseModel, IModel } from "./base";
 import { defaultGlobalState } from "./storage";;
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
 
 export class ChromeOSModel extends Disposable implements IModel {
+
+  static RECONNECT_TIMEOUT = 3 * 60 * 1000;
+
   contextID: number = 0;
+
+  #focus: boolean = false;
+  #intervalID = 0;
+
+  focusAction?: Function;
+  blurAction?: Function;
+
+  set focus(value: boolean) {
+    this.#focus = value;
+    if (value) this.focusAction ? this.focusAction() : "";
+    else this.blurAction ? this.blurAction() : "";
+  }
+  get focus() {
+    return this.#focus;
+  }
+
   globalState = defaultGlobalState;
 
   eventDispatcher = new RemoteEventDispatcher();
 
-  #engineID: string = "";
-  set engineID(value: string) {
-    this.#engineID = value;
-  }
-  get engineID() {
-    return this.#engineID;
-  }
+  engineID: string = "";
+  // #engineID: string = "";
+  // set engineID(value: string) {
+  //   this.#engineID = value;
+  // }
+  // get engineID() {
+  //   return this.#engineID;
+  // }
 
   notifyUpdate(eventName: string, value: any[]) {
-    console.log("notifyUpdate", eventName, value);
+    if (process.env.DEV) console.log("notifyUpdate", eventName, value);
     let results = this.eventDispatcher.dispatchMessage(eventName, value);
     return !!(results.filter((result) => result).length);
   }
 
   clear() {
+    this.contextID = 0;
+    this.focus = false;
     this.eventDispatcher.dispose();
   }
 
@@ -43,6 +65,16 @@ export class ChromeOSModel extends Disposable implements IModel {
     let decoderID = this.globalState.decoder;
 
     let decoderPort = new Port(decoderID);
+
+    this.focusAction = () => {
+      this.#intervalID = setInterval(() => {
+        decoderPort.reconnect();
+      }, ChromeOSModel.RECONNECT_TIMEOUT) as any;
+    }
+    this.blurAction = () => {
+      clearInterval(this.#intervalID);
+    }
+    
     decoderPort.onmessage = (msg, port) => {
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }

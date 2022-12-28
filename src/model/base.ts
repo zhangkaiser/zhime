@@ -6,6 +6,8 @@ export interface IModel extends EventTarget {
   engineID: string;
   contextID: number;
 
+  focus: boolean;
+
   data?: IDataModel;
 
   globalState: IGlobalState;
@@ -21,6 +23,7 @@ export interface IModel extends EventTarget {
 export class BaseModel extends EventTarget implements IModel {
   engineID: string = "Test";
   contextID: number = 0;
+  focus: boolean = false;
 
   globalState = defaultGlobalState;
 
@@ -40,10 +43,10 @@ export class BaseModel extends EventTarget implements IModel {
   }
 
   reset() {
-
   }
 
   clear() {
-    
+    this.focus = false;
+    this.contextID = 0;
   }
 }

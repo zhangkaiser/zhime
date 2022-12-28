@@ -1,12 +1,25 @@
 
 const path = require("path");
+
+const webpack = require("webpack");
 const WebpackCopyPlugin = require("copy-webpack-plugin");
+
+let mode = "development";
+if (process.env.PRODUCTION) mode = "production";
+
+function getDefinePluginConfig() {
+  let data = {};
+  data["process.env.DEV"] = mode == "development" ? true : false;
+  return data;
+}
+
+
 
 module.exports = {
   entry: {
     background: './src/chromeos-ui.ts'
   },
-  mode: "development",
+  mode,
   output: {
     path: path.resolve(process.cwd(), "./dist"),
     filename: '[name].js'
@@ -29,6 +42,7 @@ module.exports = {
         {from: `./assets/manifest/chromeos-ui.json`, to: "./manifest.json"},
         {from: "./assets/html/options.html", to: "./options.html"},
       ]
-    })
+    }),
+    new webpack.DefinePlugin(getDefinePluginConfig()), 
   ],
 }

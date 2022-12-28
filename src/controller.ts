@@ -49,8 +49,8 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   onActivate(engineID: string, screen: string) {
     this.model.engineID = engineID;
     this.#keyActionTable = this.getKeyActionTable();
-    this.model.notifyUpdate("onActivate", [engineID, screen]);
     this.model.reset();
+    this.model.notifyUpdate("onActivate", [engineID, screen]);
   }
 
   onDeactivated(engineID: string) {
@@ -62,10 +62,12 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   }
 
   onBlur(contextID: number) {
+    this.model.focus = false;
     this.model.notifyUpdate("noBlur", [contextID]);
   }
 
   onFocus(context: chrome.input.ime.InputContext) {
+    this.model.focus = true;
     this.model.notifyUpdate("onFocus", [context]);
   }
 
@@ -123,7 +125,8 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   handleModelMessage(e: Event) {
     let [msg, port, render] = (e as CustomEvent<IIMEMethodRenderDetail>).detail;
     let {type, value} = msg.data;
-    console.log("handleModelMessage", type, value);
+
+    if (process.env.DEV) console.log("handleModelMessage", type, value);
 
     if (imeMethodList.indexOf(type) !== -1) {
       this.setData({[type]: value[0]}, render);
