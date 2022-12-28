@@ -1,3 +1,4 @@
+import { Status } from "./consts";
 import { PartialViewDataModel } from "./datamodel";
 import { defaultGlobalState, IGlobalState } from "./storage";
 
@@ -7,6 +8,8 @@ export interface IModel extends EventTarget {
   contextID: number;
 
   focus: boolean;
+
+  status: Status;
 
   data?: PartialViewDataModel;
 
@@ -21,9 +24,10 @@ export interface IModel extends EventTarget {
 }
 
 export class BaseModel extends EventTarget implements IModel {
-  engineID: string = "Test";
+  engineID: string = "zhime";
   contextID: number = 0;
   focus: boolean = false;
+  status = Status.NO;
 
   globalState = defaultGlobalState;
 

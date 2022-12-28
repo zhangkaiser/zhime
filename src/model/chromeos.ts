@@ -5,7 +5,8 @@ import { IPort } from "src/api/common/port";
 import { Port } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
 import { BaseModel, IModel } from "./base";
-import { defaultGlobalState } from "./storage";;
+import { defaultGlobalState } from "./storage";import { Status } from "./consts";
+;
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
 
@@ -14,6 +15,7 @@ export class ChromeOSModel extends Disposable implements IModel {
   static RECONNECT_TIMEOUT = 3 * 60 * 1000;
 
   contextID: number = 0;
+  status = Status.NO;
 
   #focus: boolean = false;
   #intervalID = 0;
@@ -34,7 +36,7 @@ export class ChromeOSModel extends Disposable implements IModel {
 
   eventDispatcher = new RemoteEventDispatcher();
 
-  engineID: string = "";
+  engineID: string = "zhime";
   // #engineID: string = "";
   // set engineID(value: string) {
   //   this.#engineID = value;
@@ -52,6 +54,7 @@ export class ChromeOSModel extends Disposable implements IModel {
   clear() {
     this.contextID = 0;
     this.focus = false;
+    this.status = Status.NO;
     this.eventDispatcher.dispose();
   }
 
@@ -74,7 +77,7 @@ export class ChromeOSModel extends Disposable implements IModel {
     this.blurAction = () => {
       clearInterval(this.#intervalID);
     }
-    
+
     decoderPort.onmessage = (msg, port) => {
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }

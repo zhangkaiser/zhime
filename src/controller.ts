@@ -1,4 +1,4 @@
-import { IMEControllerEventInterface, imeMethodList } from "src/consts/chromeosIME";
+import { IIMEMethodUnion, IMEControllerEventInterface, imeMethodList } from "src/consts/chromeosIME";
 import { IModel, BaseModel } from "src/model/base";
 import { ChromeOSModel, IIMEMethodRenderDetail } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
@@ -33,8 +33,7 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
 
     if (env == "chromeos") {
       this.model = new ChromeOSModel;
-      this.model.addEventListener("onmessage", this.handleModelMessage.bind(this))
-
+      this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
     } else {
       this.model = new BaseModel;
     }
@@ -67,10 +66,12 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   onBlur(contextID: number) {
     this.model.focus = false;
     this.model.notifyUpdate("noBlur", [contextID]);
+    this.model.status = Status.NO;
   }
 
   onFocus(context: chrome.input.ime.InputContext) {
     this.model.focus = true;
+    this.model.status = Status.INITED;
     this.model.notifyUpdate("onFocus", [context]);
   }
 
@@ -84,8 +85,7 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     }
 
     this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
-    return false;
-    
+    return false; 
   }
 
   onCandidateClicked(engineID: string, candidateID: number, button: "left" | "middle" | "right") {
@@ -121,10 +121,10 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     let list: ActionType[] = [];
     // Esc key.
     list.push(["keyup", [false, false, false], "Esc", null, false, null, this.hideIME, this, []]);
-    // 
+    // Alt + Space.
     list.push(["keydown", [false, false, true], " ", Status.INITED, true, null, this.handleIMESwitchKey1, this, []]);
-
-    list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
+    // Control + Shift.
+    list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, () => {}, this, []]);
     list.push(["keyup", [true, false, false], "Shift", Status.INITED, false, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
     
     return [];
@@ -164,16 +164,41 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
 
   }
 
+  updateStatus(type: IIMEMethodUnion, value: readonly any[]) {
+
+    switch(type) {
+      case "commitText":
+        this.model.status = Status.COMMITTING;
+        break;
+      case "setCandidates":
+        this.model.status = Status.SHOWING;
+        break;
+      case "setComposition":
+        this.model.status = Status.COMPOSING;
+        break;
+      case "clearComposition":
+      case "setCandidateWindowProperties":
+      case "hideInputView":
+        if (type === "setCandidateWindowProperties" && (value[0] as chrome.input.ime.CandidateWindowParameter).properties.visible) return;
+        this.model.status = Status.INITED;
+        break;
+      default:
+        // pass.
+    }
+  }
+
   handleModelMessage(e: Event) {
     let [msg, port, render] = (e as CustomEvent<IIMEMethodRenderDetail>).detail;
-    let {type, value} = msg.data;
+    let {type, value} = msg.data as {type: IIMEMethodUnion, value: any[]};
+
+    this.updateStatus(type, value);
 
     if (process.env.DEV) console.log("handleModelMessage", type, value);
 
     if (imeMethodList.indexOf(type) !== -1) {
       this.setData({[type]: value[0]}, render);
     } else {
-      console.error("Not handler", type, value);
+      console.error("Not support handler", type, value);
     }
 
   }

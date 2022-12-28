@@ -5,7 +5,6 @@ import { IView } from "./base";
 export class ChromeOSView implements IView, IDataModel {
 
   set data(valueObj: IDataModel) {
-
     for (let item in valueObj) {
       if (item in this) {
         this[item as keyof IDataModel] = valueObj[item  as keyof IDataModel];
@@ -14,7 +13,6 @@ export class ChromeOSView implements IView, IDataModel {
   }
 
   set clearComposition(value: any) {
-
     chrome.input.ime.clearComposition(value);
   }
 

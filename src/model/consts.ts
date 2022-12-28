@@ -2,7 +2,8 @@
 export enum Status {
   NO, // No focus.
   INITED, 
-  SHOWING, 
+  SHOWING,
+  COMPOSING,
   COMMITTING, 
   FETCHING
 }
