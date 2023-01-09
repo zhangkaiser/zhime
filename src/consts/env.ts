@@ -1,2 +1,2 @@
 
-export type IEnv = "chromeos" | "vscode" | "extensions";
+export type IEnv = "chromeos" | "vscode" | "extensions" | "web";

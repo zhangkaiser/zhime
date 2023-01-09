@@ -17,7 +17,8 @@ function getDefinePluginConfig() {
 
 module.exports = {
   entry: {
-    background: './src/chromeos-ui.ts'
+    background: './src/chromeos-ui.ts',
+    options: "./src/options.ts"
   },
   mode,
   output: {
