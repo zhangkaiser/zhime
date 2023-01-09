@@ -33,11 +33,6 @@ export class Port extends Disposable implements IPort {
       if (this.ondisconnect) this.ondisconnect(this);
     });
 
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError);
-      return false;
-    }
-
     return true;
   }
 
