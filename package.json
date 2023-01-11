@@ -4,7 +4,10 @@
   "description": "Chrome OS IME,Browser Extension IME UI,VScode Simple IME.",
   "main": "index.js",
   "scripts": {
-    "test": "env TS_NODE_PROJECT=./test/tsconfig.test.json mocha --require ts-node/register --require tsconfig-paths/register --extension ts --recursive './test/**/*.ts'"
+    "test": "env TS_NODE_PROJECT=./test/tsconfig.test.json mocha --require ts-node/register --require tsconfig-paths/register --extension ts --recursive './test/**/*.ts'",
+    "build": "env PRODUCTION && webpack",
+    "build:deps": "rm -r dist",
+    "watch": "webpack -w"
   },
   "repository": {
     "type": "git",

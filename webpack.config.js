@@ -5,14 +5,13 @@ const webpack = require("webpack");
 const WebpackCopyPlugin = require("copy-webpack-plugin");
 
 let mode = "development";
-if (process.env.PRODUCTION) mode = "production";
+if ("PRODUCTION" in process.env) mode = "production";
 
 function getDefinePluginConfig() {
   let data = {};
   data["process.env.DEV"] = mode == "development" ? true : false;
   return data;
 }
-
 
 
 module.exports = {

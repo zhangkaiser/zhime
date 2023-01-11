@@ -37,13 +37,6 @@ export class ChromeOSModel extends Disposable implements IModel {
   eventDispatcher = new RemoteEventDispatcher();
 
   engineID: string = "zhime";
-  // #engineID: string = "";
-  // set engineID(value: string) {
-  //   this.#engineID = value;
-  // }
-  // get engineID() {
-  //   return this.#engineID;
-  // }
 
   notifyUpdate(eventName: string, value: any[]) {
     if (process.env.DEV) console.log("notifyUpdate", eventName, value);
@@ -65,6 +58,23 @@ export class ChromeOSModel extends Disposable implements IModel {
   }
 
   registerDecoder() {
+    if (
+      !this.globalState 
+      || !Reflect.has(this.globalState, "decoder") 
+      || !this.globalState.decoder
+    ) {
+      this.eventDispatcher.dispatchMessage = (eventName, value) => {
+        if (eventName === "onKeyEvent") {
+          this.dispatchEvent(new CustomEvent("onmessage", {detail: [
+            {data: {type: "keyEventHandled", value: [[value[2], false]]}},
+            null, 
+            true
+          ]}));
+        }
+        return [true];
+      }
+      return;
+    }
     let decoderID = this.globalState.decoder;
 
     let decoderPort = new Port(decoderID);
@@ -75,6 +85,7 @@ export class ChromeOSModel extends Disposable implements IModel {
         decoderPort.reconnect();
       }, ChromeOSModel.RECONNECT_TIMEOUT) as any;
     }
+
     this.blurAction = () => {
       if(process.env.DEV) console.log("blurAction.");
       clearInterval(this.#intervalID);
