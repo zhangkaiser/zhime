@@ -1,7 +1,6 @@
 
 import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
-import { ChromeOSProxy } from "src/viewmodel/chromeos-proxy";
 import { IMessageObjectType } from "src/api/common/message";
 import { LocalStorage } from "src/api/extension/storage";
 import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";

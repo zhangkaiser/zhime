@@ -4,8 +4,15 @@ import { IDataModel } from "src/model/datamodel";
 import { IView } from "./base";
 
 @customElement("web-ime-view")
-class WebIMEView extends LitElement implements IView {
-  @property() data = {};
+export class WebIMEView extends LitElement implements IView {
+
+  constructor() {
+    super();
+    addEventListener("load", () => {
+      this.dispatchEvent(new Event("onActivate"));
+    });
+  }
+  @property() states = {};
 
   commitText() {
 
@@ -47,7 +54,8 @@ class WebIMEView extends LitElement implements IView {
 
   render() {
     return html`
-      <div class="input-view-bg">
+      <div class="input-view-bg" style="position: fixed;z-index: 999999;">
+        ${JSON.stringify(this.states)}
         <div class="input-view-box">
           <div class="line">
             ${this.composition()}
@@ -61,12 +69,3 @@ class WebIMEView extends LitElement implements IView {
     `;
   }
 }
-
-let container = document.getElementById("container");
-
-render(html`
-<web-ime-view id="ime"></web-ime-view>
-`, container!)
-
-
-export let imeView = document.getElementById("ime");

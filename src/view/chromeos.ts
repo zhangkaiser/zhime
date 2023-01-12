@@ -4,7 +4,7 @@ import { IView } from "./base";
 
 export class ChromeOSView implements IView, IDataModel {
 
-  set data(valueObj: IDataModel) {
+  set states(valueObj: IDataModel) {
     for (let item in valueObj) {
       if (item in this) {
         this[item as keyof IDataModel] = valueObj[item  as keyof IDataModel];

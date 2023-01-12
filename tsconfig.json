@@ -28,7 +28,8 @@
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "useDefineForClassFields": false
   },
   "include": [
     "src",

@@ -1,4 +1,4 @@
-import { IIMEMethodUnion, IMEControllerEventInterface, imeMethodList } from "src/consts/chromeosIME";
+import { IIMEMethodUnion, IMEControllerEventInterface, imeEventList, imeMethodList } from "src/consts/chromeosIME";
 import { IModel, BaseModel } from "src/model/base";
 import { ChromeOSModel, IIMEMethodRenderDetail } from "src/model/chromeos";
 import { IEnv } from "src/consts/env";
@@ -153,11 +153,11 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
 
   setData(newData: PartialViewDataModel, isRender: boolean = true) {
     if (isRender && this.view) {
-      this.view.data = newData;
+      this.view.states = newData;
       return;
     }
 
-    this.model.data = newData;
+    this.model.states = newData;
   }
 
   hideIME() {
@@ -218,8 +218,15 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
 
     if (imeMethodList.indexOf(type) !== -1) {
       this.setData({[type]: value[0]}, render);
+    } else if(imeEventList.indexOf(type) !== -1) {
+      // pass.
     } else {
-      console.error("Not support handler", type, value);
+      if (['print', 'printErr'].indexOf(type) !== -1 && (this as any)[type]) {
+        (this as any)[type](...value);
+      } else {
+        console.error("Not support handler", type, value);
+
+      }
     }
 
   }

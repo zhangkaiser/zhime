@@ -11,7 +11,7 @@ export interface IModel extends EventTarget {
 
   status: Status;
 
-  data?: PartialViewDataModel;
+  states?: PartialViewDataModel;
 
   globalState: IGlobalState;
 
@@ -31,14 +31,14 @@ export class BaseModel extends EventTarget implements IModel {
 
   globalState = defaultGlobalState;
 
-  #data: PartialViewDataModel = {};
+  #states: PartialViewDataModel = {};
 
-  set data(value: PartialViewDataModel) {
-    this.#data = value;
+  set states(value: PartialViewDataModel) {
+    this.#states = value;
   }
 
-  get data() {
-    return this.#data;
+  get states() {
+    return this.#states;
   }
 
   notifyUpdate(eventName: string, value: any[]) {
