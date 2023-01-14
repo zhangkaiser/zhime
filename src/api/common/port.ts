@@ -1,3 +1,4 @@
+import { Disposable } from "src/api/common/disposable";
 import { IDisposable } from "./disposable";
 import { IMessageObjectType } from "./message";
 
@@ -44,4 +45,69 @@ export function convertToPortInstance<T extends FunctionConstructor>(
   });
 
   return instance;
+}
+
+export class WebWorkerPort extends Disposable implements IPort {
+
+  constructor(name: string) {
+    super();
+    this.name = name;
+  }
+
+
+  ondisconnect?: ((port: IPort) => void) | undefined;
+  onmessage?: (msg: IMessageObjectType, port: IPort) => void;
+
+  scriptSrc= "";
+
+
+  #worker?: Worker;
+  
+  set name(value: string) {
+    this.scriptSrc = value;
+  }
+
+  connect() {
+    try {
+      this.#worker = new Worker(this.scriptSrc);
+    } catch(e) {
+      console.error(e);
+      return false;
+    }
+
+    this.#worker!.onmessage = (ev) => {
+      let data = ev.data as IMessageObjectType;
+      if (this.onmessage) this.onmessage(data, this);
+      else console.error("No register port `onmessage` handler.", this.scriptSrc);
+    }
+
+    this.disposable = {
+      dispose: () => {
+        this.#worker!.onmessage = null;
+      }
+    }
+
+    return true;
+  }
+
+  reconnect() {
+    return this.connect();
+  }
+
+  postMessage(msg: IMessageObjectType) {
+    if (!this.#worker) this.reconnect();
+
+    try {
+      this.#worker!.postMessage(msg);
+    } catch(e) {
+      console.error(e);
+      return false;
+    }
+    return true;
+  }
+
+  disconnect() {
+    this.#worker?.terminate();
+  }
+
 }

@@ -7,6 +7,8 @@ import { PartialViewDataModel } from "src/model/datamodel";
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
 import { KeyRexExp, Status } from "src/model/consts";
+import { WebModel } from "src/model/web";
+import { Model } from "./model/model";
 
 
 type ActionType = [
@@ -31,12 +33,18 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
   constructor(public env: IEnv) {
     super();
 
-    if (env == "chromeos") {
-      this.model = new ChromeOSModel;
-      this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
-    } else {
-      this.model = new BaseModel;
+    switch (env) {
+      case "chromeos":
+        this.model = new ChromeOSModel;
+        break;
+      case "web":
+        this.model = new WebModel;
+        break;
+      default:
+        this.model = new Model;
     }
+
+    this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
 
   }
 
