@@ -93,7 +93,7 @@ function main() {
   const container = document.getElementById("container");
 
   render(html`
-  <web-ime-view id="ime" ?hidden=${true}></web-ime-view>
+  <web-ime-view id="ime"></web-ime-view>
   <textarea style="width: 100vw;height: 100vh;" id="input"></textarea>
   `, container!);
 
