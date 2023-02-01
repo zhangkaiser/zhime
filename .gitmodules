@@ -1,9 +1,6 @@
-[submodule "libGooglePinyin-wasm"]
-  path = decoders/libGooglePinyin-wasm
-  url = https://github.com/zhangkaiser/libGooglePinyin-wasm.git
-[submodule "librime-wasm"]
-  path = decoders/librime-wasm
-  url = https://github.com/zhangkaiser/librime-wasm.git
-[submodule "chromeos-shuangpin-ime"]
-  path = decoders/chromeos-shuangpin-ime
-  url = https://github.com/zhangkaiser/chromeos-shuangpin-ime.git
+[submodule "librime"]
+	path = librime
+	url = https://github.com/zhangkaiser/librime-wasm.git
+[submodule "shuangpin"]
+	path = shuangpin
+	url = https://github.com/zhangkaiser/chromeos-shuangpin-ime.git
