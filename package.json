@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "env TS_NODE_PROJECT=./test/tsconfig.test.json mocha --require ts-node/register --require tsconfig-paths/register --extension ts --recursive './test/**/*.ts'",
+    "clone:submodule": "git submodule update --init",
+    "shuangpin": "cd shuangpin && npm install && npm run build",
+    "librime": "cd librime && npm run librime && npm install && npm run build && npx rollup -c rollup.config.js",
     "build": "env PRODUCTION && webpack",
-    "build:deps": "rm -r dist",
+    "build:deps": "rm -r dist && npm run clone:submodule && npm run shuangpin && npm run librime",
     "watch": "webpack -w"
   },
   "repository": {
