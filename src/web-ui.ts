@@ -12,6 +12,7 @@ import { html, render } from "lit";
 
 import "./components/tui-editor";
 import "./view/webime";
+import "./components/edit-header";
 
 import type { TuiEditor } from "./components/tui-editor";
 import type { WebIMEView } from "./view/webime";
@@ -67,7 +68,7 @@ class WebUI extends Controller {
     console.warn(args[0]);
   }
 
-  async onKeyEventAdapter(e: KeyboardEvent) {
+  onKeyEventAdapter(e: KeyboardEvent) {
     this.requestId++;
     const {ctrlKey, altKey, shiftKey, code, key, metaKey, type} = e;
     const keyData = {
@@ -84,8 +85,7 @@ class WebUI extends Controller {
     
     let requestId = '' + this.requestId;
     if (!this.onKeyEvent('zhime', keyData, requestId)) {
-      console.log("module.status", requestId, this.model.status);
-      if (this.model.status === Status.INITED && ['Backspace', 'Enter', 'Escape', " "].indexOf(key) > -1) {
+      if (this.model.status === Status.INITED && (key.length != 1 || key == ' ' || /^[0-9]/.test(key))) {
         return;
       }
     }
@@ -109,8 +109,9 @@ function main() {
   const container = document.getElementById("container");
 
   render(html`
-  <tui-editor id="editor">
-  </tui-editor>`, container!);
+  <tui-editor id="editor"></tui-editor>
+  <edit-header></edit-header>
+  `, container!);
 
   const imeView = document.createElement("ime-input-view") as WebIMEView;
   let editorElem = document.getElementById("editor") as TuiEditor;
