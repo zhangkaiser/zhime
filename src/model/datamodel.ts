@@ -72,6 +72,8 @@ export interface IDataModel {
    * function is used to propagate that event to the system.
    */
   sendKeyEvents: chrome.input.ime.SendKeyEventParameters;
+
+  commitText: chrome.input.ime.CommitTextParameters;
 }
 
 export type PartialViewDataModel = Partial<IDataModel>;

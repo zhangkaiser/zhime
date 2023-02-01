@@ -7,11 +7,15 @@
 import { Controller } from "./controller";
 import { LocalStorage } from "src/api/common/storage";
 import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
-import type { WebIMEView } from "./view/webime";
 import { IView } from "./view/base";
 import { html, render } from "lit";
 
+import "./components/tui-editor";
 import "./view/webime";
+
+import type { TuiEditor } from "./components/tui-editor";
+import type { WebIMEView } from "./view/webime";
+import { Status } from "./model/consts";
 
 
 class WebUI extends Controller {
@@ -39,17 +43,15 @@ class WebUI extends Controller {
 
   registerWindowEvents() {
 
-    window.onkeydown = this.onKeyEventAdapter.bind(this);
-    window.onkeyup = this.onKeyEventAdapter.bind(this);
+    window.document.onkeydown = this.onKeyEventAdapter.bind(this);
+    window.document.onkeyup = this.onKeyEventAdapter.bind(this);
 
     window.onfocus = this.onFocusAdapter.bind(this);
     window.onblur = () => {
       this.onBlur(this.contextID);
     }
 
-    window.oncancel = console.log.bind(null, "oncancel");
-    window.onchange = console.log.bind(null, "onchange");
-    window.oninput = console.log.bind(null, "oninput"); 
+    window.document.oninput = console.log.bind(null, "oninput"); 
   }
 
   loadIMEStateStorage() {
@@ -62,18 +64,32 @@ class WebUI extends Controller {
   }
 
   printErr(args: any) {
-    console.log(args[0]);
+    console.warn(args[0]);
   }
 
-  onKeyEventAdapter(e: KeyboardEvent) {
+  async onKeyEventAdapter(e: KeyboardEvent) {
     this.requestId++;
     const {ctrlKey, altKey, shiftKey, code, key, metaKey, type} = e;
     const keyData = {
       ctrlKey, altKey, shiftKey,
       type, code, key, 
-      metaKey, 
+      metaKey,
     }
-    return this.onKeyEvent('zhime', keyData, '' + this.requestId);
+
+    if (code === "Backquote" && key === "Unidentified") {
+      keyData.key = "`";
+    }
+
+    if (key === "Process") return; // OS IME processor.
+    
+    let requestId = '' + this.requestId;
+    if (!this.onKeyEvent('zhime', keyData, requestId)) {
+      console.log("module.status", requestId, this.model.status);
+      if (this.model.status === Status.INITED && ['Backspace', 'Enter', 'Escape', " "].indexOf(key) > -1) {
+        return;
+      }
+    }
+    e.preventDefault();
   }
 
   onFocusAdapter(e: Event) {
@@ -93,16 +109,27 @@ function main() {
   const container = document.getElementById("container");
 
   render(html`
-  <web-ime-view id="ime"></web-ime-view>
-  <textarea style="width: 100vw;height: 100vh;" id="input"></textarea>
-  `, container!);
+  <tui-editor id="editor">
+  </tui-editor>`, container!);
 
-  const imeView = document.getElementById("ime") as WebIMEView;
-  imeView.addEventListener("onActivate", () => {
+  const imeView = document.createElement("ime-input-view") as WebIMEView;
+  let editorElem = document.getElementById("editor") as TuiEditor;
+  let imeWidght = imeView.getImeWidghtElem();
+
+  imeView.addEventListener("activate", () => {
     controller.onActivate("zhime", "");
   });
+
+  imeView.addEventListener("show", () => {
+    let pos = editorElem.editor.getSelection();
+    editorElem.editor.addWidget(imeWidght, "bottom", pos[0]);
+  });
+
+  imeView.addEventListener("commit", (e) => {
+    editorElem.editor.insertText((e as CustomEvent).detail.text);
+  })
   
-  controller.view = imeView as any as IView; 
+  controller.view = imeView; 
 }
 
 main();

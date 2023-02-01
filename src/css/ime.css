@@ -1,0 +1,44 @@
+.input-view-bg {
+  position: fixed;
+  z-index: 9999999;
+  background: #fff;
+}
+
+.input-view-box {
+  border: 1px solid #000;
+  min-width: 100px;
+}
+
+.composition-bg {
+  padding: 4px 7px;
+}
+
+.candidates-bg {
+}
+
+.candidates-box {
+  min-width: 100px;
+  padding: 4px 0;
+}
+
+.candidate-bg {
+  display: flex;
+  flex-direction: row;
+  line-height: 1.2em;
+}
+
+.candidate-bg .label {
+  min-width: 7px;
+  margin: 4px;
+}
+
+.candidate-box {
+  display: flex;
+  flex-direction: row;
+  justify-items: stretch;
+  padding: 4px 7px;
+}
+
+.annotation {
+  opacity: 0.8;
+}
