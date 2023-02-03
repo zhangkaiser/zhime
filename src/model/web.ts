@@ -17,7 +17,12 @@ export class WebModel extends ChromeOSModel implements IModel {
     let decoderConfig = webDecoders[decoderID];
 
     let decoderPort = new WebWorkerPort(decoderConfig.scripts);
-    
+
+    decoderPort.addEventListener("connected", () => {
+      globalThis.imeWorker = decoderPort.worker;
+      window.dispatchEvent(new Event("registedWorker"));
+    });
+
     decoderPort.onmessage = (msg, port) => {
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }

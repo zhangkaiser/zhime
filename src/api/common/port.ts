@@ -70,6 +70,7 @@ export class WebWorkerPort extends Disposable implements IPort {
   connect() {
     try {
       this.#worker = new Worker(this.scriptSrc);
+      this.dispatchEvent(new Event("connected"));
     } catch(e) {
       console.error(e);
       return false;
@@ -92,6 +93,10 @@ export class WebWorkerPort extends Disposable implements IPort {
 
   reconnect() {
     return this.connect();
+  }
+
+  get worker() {
+    return this.#worker;
   }
 
   postMessage(msg: IMessageObjectType) {

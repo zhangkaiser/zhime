@@ -6,10 +6,12 @@
   "scripts": {
     "test": "env TS_NODE_PROJECT=./test/tsconfig.test.json mocha --require ts-node/register --require tsconfig-paths/register --extension ts --recursive './test/**/*.ts'",
     "clone:submodule": "git submodule update --init",
-    "shuangpin": "cd shuangpin && npm install && npm run build",
-    "librime": "cd librime && npm run librime && npm install && npm run build && npx rollup -c rollup.config.js",
+    "shuangpin": "cd shuangpin && npm install && cd googlepinyin && npm install && cd .. && npm run build",
+    "librime": "cd librime && npm run librime && npm install && npm run build",
     "build": "env PRODUCTION && webpack",
-    "build:deps": "rm -r dist && npm run clone:submodule && npm run shuangpin && npm run librime",
+    "build:deps": "rimraf dist && npm run clone:submodule && npm run shuangpin && npm run librime",
+    "update:shuangpin": "cd shuangpin && git checkout wasm-decoder && git pull && cd .. && git add shuangpin && git commit -m \"Update shuangpin submodule to latest.\"",
+    "update:librime": "cd librime && git checkout master && git pull && cd .. && git add librime && git commit -m \"Update librime submodule to latest.\"",
     "watch": "webpack -w"
   },
   "repository": {

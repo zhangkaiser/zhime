@@ -1,7 +1,9 @@
 
 
 module globalThis {
-  jsdom: JSDOM
+  jsdom: JSDOM;
+  
+  var imeWorker: Worker | undefined;
 }
 
 declare module "*.css" {

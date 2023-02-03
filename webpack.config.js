@@ -48,8 +48,11 @@ module.exports = {
   plugins: [
     new WebpackCopyPlugin({
       patterns: [
-        {from: `./assets/manifest/chromeos-ui.json`, to: "./manifest.json"},
+        {from: "./assets/manifest/chromeos-ui.json", to: "./manifest.json"},
         {from: "./assets/html/options.html", to: "./options.html"},
+        {from: "./librime/out/worker", to: "./web/decoders"},
+        {from: "./librime/out/data", to: "./web/data"},
+        {from: "./assets/manifest/headers", to: "./web/_headers"}
       ]
     }),
     new webpack.DefinePlugin(getDefinePluginConfig()), 

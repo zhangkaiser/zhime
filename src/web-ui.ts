@@ -13,9 +13,11 @@ import { html, render } from "lit";
 import "./components/tui-editor";
 import "./view/webime";
 import "./components/edit-header";
+import "../librime/out/component/options-page.js";
 
 import type { TuiEditor } from "./components/tui-editor";
 import type { WebIMEView } from "./view/webime";
+
 import { Status } from "./model/consts";
 
 
@@ -111,10 +113,16 @@ function main() {
   render(html`
   <tui-editor id="editor"></tui-editor>
   <edit-header></edit-header>
+  <options-page id="ime-options"></options-page>
   `, container!);
 
   const imeView = document.createElement("ime-input-view") as WebIMEView;
-  let editorElem = document.getElementById("editor") as TuiEditor;
+  const editorElem = document.getElementById("editor") as TuiEditor;
+  const optionsPage = document.getElementById("ime-options") as any;
+  window.addEventListener("registedWorker", () => {
+    imeWorker && optionsPage.setWorker(imeWorker);
+  });
+
   let imeWidght = imeView.getImeWidghtElem();
 
   imeView.addEventListener("activate", () => {
