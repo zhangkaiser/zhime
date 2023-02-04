@@ -116,7 +116,7 @@ function main() {
   <edit-header>
     <div slot="left-name">编辑器设置</div>
     <div slot="left">none</div>
-    <div slot="right-name"><span>浏览器设置</span></div>
+    <div slot="right-name"><span>输入法设置</span></div>
     <options-page slot="right" id="ime-options"></options-page>
 
   </edit-header>

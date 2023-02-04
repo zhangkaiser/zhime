@@ -53,7 +53,7 @@ module.exports = {
         {from: "./assets/html/index.html", to: "./web/index.html"},
         {from: "./librime/out/worker", to: "./web/decoders"},
         {from: "./librime/out/data", to: "./web/data"},
-        {from: "./assets/manifest/headers", to: "./web/_headers"}
+        {from: "./assets/manifest/_headers", to: "./web"}
       ]
     }),
     new webpack.DefinePlugin(getDefinePluginConfig()), 
