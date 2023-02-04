@@ -2,7 +2,7 @@ import { decompressionFile } from "src/api/common/compress";
 
 export function getFilenameByPath(path: string) {
   let paths = path.split('/').filter((p) => !!p);
-  return paths[-1];
+  return paths.pop()!;
 }
 
 export function getBlobFile(fs: typeof FS, path: string): Blob {
