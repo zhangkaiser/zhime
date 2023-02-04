@@ -10,10 +10,6 @@ class EditHeader extends LitElement {
   }
   .header-box {
     height: 8vh;
-    background: linear-gradient( to right, green, blue);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-align: center;
     display: flex;
     justify-content: space-between;
   }
@@ -21,18 +17,50 @@ class EditHeader extends LitElement {
     font-size: 200%;
     font-weight: bolder;
   }
+  .edit-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 10vh;
+    left: 0;
+    background: #ebebeb;
+    padding: 32px;
+    overflow: scroll;
+  }
   `;
+
+  showEditPage(e: Event) {
+    let target = e.currentTarget as HTMLDivElement;
+    let nextElement = target.nextElementSibling as HTMLTableSectionElement;
+    if (nextElement && nextElement.tagName === "SECTION") {
+      nextElement.hidden = !nextElement.hidden;
+    }
+  }
 
   render() {
     return html`
     <div class="header-bg">
       <div class="header-box">
-        <slot name="left"></slot>
+        <div>
+          <div class="" @click=${this.showEditPage}>
+            <slot name="left-name"></slot>
+          </div>
+          <section class="edit-container" hidden>
+            <slot name="left"></slot>
+          </section>
+        </div>
         <p>
           <span class="logo">ZH IME</span>
           <span>Web中文输入法</span>
         </p>
-        <slot name="right"></slot>
+        <div>
+          <div class="" @click=${this.showEditPage}>
+            <slot name="right-name"></slot>
+          </div>
+          <section class="edit-container" hidden>
+            <slot name="right"></slot>
+          </section>
+        </div>
       </div>
 
     </div>

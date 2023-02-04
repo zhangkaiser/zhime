@@ -24,6 +24,11 @@ export class WebModel extends ChromeOSModel implements IModel {
     });
 
     decoderPort.onmessage = (msg, port) => {
+      // Dispatch decoder event.
+      if (["wasmLoaded"].indexOf(msg.data.type) > -1) {
+        window.dispatchEvent(new Event(msg.data.type));
+        return;
+      }
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }
 

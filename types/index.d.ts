@@ -2,6 +2,8 @@
 
 module globalThis {
   jsdom: JSDOM;
+
+  var Module: any;
   
   var imeWorker: Worker | undefined;
 }

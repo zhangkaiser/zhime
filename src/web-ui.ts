@@ -13,7 +13,7 @@ import { html, render } from "lit";
 import "./components/tui-editor";
 import "./view/webime";
 import "./components/edit-header";
-import "../librime/out/component/options-page.js";
+import "../librime/emscripten/src/options-page";
 
 import type { TuiEditor } from "./components/tui-editor";
 import type { WebIMEView } from "./view/webime";
@@ -111,17 +111,39 @@ function main() {
   const container = document.getElementById("container");
 
   render(html`
+  <div id="loading">正在加载依赖中</div>
   <tui-editor id="editor"></tui-editor>
-  <edit-header></edit-header>
-  <options-page id="ime-options"></options-page>
+  <edit-header>
+    <div slot="left-name">编辑器设置</div>
+    <div slot="left">none</div>
+    <div slot="right-name"><span>浏览器设置</span></div>
+    <options-page slot="right" id="ime-options"></options-page>
+
+  </edit-header>
   `, container!);
 
   const imeView = document.createElement("ime-input-view") as WebIMEView;
   const editorElem = document.getElementById("editor") as TuiEditor;
   const optionsPage = document.getElementById("ime-options") as any;
+  const loading = document.getElementById("loading") as HTMLDivElement;
+  loading.style.position = "fixed";
+  loading.style.top = "0";
+  loading.style.left = "0";
+  loading.style.right = "0";
+  loading.style.bottom = "0";
+  loading.style.zIndex = "214783647";
+  loading.style.lineHeight = "100vh";
+  loading.style.textAlign = "center";
+  loading.style.backgroundColor = "#fff";
+
+  
   window.addEventListener("registedWorker", () => {
     imeWorker && optionsPage.setWorker(imeWorker);
   });
+
+  window.addEventListener("loadedWasm", () => {
+    loading.hidden = true;
+  })
 
   let imeWidght = imeView.getImeWidghtElem();
 
