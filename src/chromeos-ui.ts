@@ -11,6 +11,7 @@ class Main extends Controller {
 
   constructor() {
     super("chromeos");
+    this.view = new ChromeOSView();
   }
 
   registerSelfEvents() {
@@ -45,10 +46,7 @@ class Main extends Controller {
     const ime = chrome.input.ime;
 
     this.disposable = registerEvent(ime.onActivate, this.onActivate.bind(this));
-    this.disposable = registerEvent(ime.onDeactivated, (engineID) => {
-      this.onDeactivated(engineID);
-      this.disposable.dispose();
-    });
+    this.disposable = registerEvent(ime.onDeactivated, this.onDeactivated.bind(this));
     this.disposable = registerEvent(ime.onFocus, this.onFocus.bind(this));
     this.disposable = registerEvent(ime.onBlur, this.onBlur.bind(this));
     this.disposable = registerEvent(ime.onCandidateClicked, this.onCandidateClicked.bind(this));
@@ -86,7 +84,6 @@ async function main() {
   setGlobalLocalStorageInstance(LocalStorage<any>);
   
   let controller = new Main();
-  controller.view = new ChromeOSView();
   await controller.initialize();
 
   controller.registerSelfEvents();
