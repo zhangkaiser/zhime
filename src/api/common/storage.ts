@@ -25,7 +25,7 @@ export class LocalStorage<T extends Object> implements ILocalStorage<T> {
 
     let entries: [string, any][] = [];
 
-    list.forEach((item) => localStorage.getItem(item as string) ? entries.push([item as string, JSON.stringify(localStorage.getItem(item as string))]) : "");
+    list.forEach((item) => localStorage.getItem(item as string) ? entries.push([item as string, JSON.parse(localStorage.getItem(item as string) || "")]) : "");
 
     return Object.fromEntries(entries) as any;
   }
