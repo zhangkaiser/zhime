@@ -1,9 +1,7 @@
 import { LitElement, html, css, PropertyValueMap, unsafeCSS } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
+import { ref } from "lit/directives/ref.js";
 import Editor, { EditorType, PreviewStyle } from '@toast-ui/editor';
-
-import styles from "@toast-ui/editor/dist/toastui-editor.css";
-import { getTempStrArr } from "src/utils/template-strings-array";
 
 @customElement("tui-editor")
 export class TuiEditor extends LitElement {
@@ -15,11 +13,9 @@ export class TuiEditor extends LitElement {
   @property({}) height = '90vh';
   @property() minheight = '200px';
   @property() initialValue = "";
-  @property() previewStyle: PreviewStyle = "tab";
+  @property() previewStyle: PreviewStyle = "vertical";
   @property() previewHighlight = true;
   @property() initialEditType: EditorType = "markdown";
-
-  static styles = css(getTempStrArr([styles]));
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this.editor = new Editor({
@@ -32,11 +28,11 @@ export class TuiEditor extends LitElement {
   }
 
   get editorElement() {
-    return this.shadowRoot!.getElementById("editor")!;
+    return document.getElementById("editor")!;
   }
 
   render() {
-    return html`<div id="editor"></div>`;
+    return html`<div><slot></slot></div>`;
   }
 }
 

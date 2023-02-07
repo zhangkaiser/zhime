@@ -10,6 +10,8 @@ import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage"
 import { IView } from "./view/base";
 import { html, render } from "lit";
 
+import tuiEditorStyles from "@toast-ui/editor/dist/toastui-editor.css";
+
 import "./components/tui-editor";
 import "./view/webime";
 import "./components/edit-header";
@@ -42,7 +44,7 @@ class WebUI extends Controller {
     super("web");
     this.render();
     this.imeView = document.createElement("ime-input-view") as WebIMEView;
-    this.editor = document.getElementById("editor") as TuiEditor;
+    this.editor = document.getElementById("tui-editor") as TuiEditor;
     this.optionsPage = document.getElementById("ime-options") as OptionsPage;
     this.edits = document.getElementById("edits") as EditHeader;
     this.imeWidght = this.imeView.getImeWidghtElem() as IMEWidght;
@@ -122,7 +124,10 @@ class WebUI extends Controller {
 
   render() {
     render(html`
-    <tui-editor id="editor"></tui-editor>
+    <style>${tuiEditorStyles}</style>
+    <tui-editor id="tui-editor">
+      <div id="editor"></div>
+    </tui-editor>
     <edit-header id="edits">
       <div slot="left-name">编辑器设置</div>
       <div slot="left">none</div>
