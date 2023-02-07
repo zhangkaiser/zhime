@@ -53,19 +53,21 @@ class WebUI extends Controller {
   }
 
   registerWindowListeners() {
-
-    this.disposable = registerGlobalEventDisposable(this.editor.onkeydown, this.onKeyEventAdapter.bind(this));
-    this.disposable = registerGlobalEventDisposable(this.editor.onkeyup, this.onKeyEventAdapter.bind(this));
-    this.disposable = registerGlobalEventDisposable(window.onclose, this.onDeactivated.bind(this));
+    this.disposable = registerGlobalEventDisposable(this.editor, "onkeydown", this.onKeyEventAdapter.bind(this));
+    this.disposable = registerGlobalEventDisposable(this.editor, "onkeyup", this.onKeyEventAdapter.bind(this));
+    this.disposable = registerGlobalEventDisposable(window, "onclose", this.onDeactivated.bind(this));
 
     // TODO(针对移动端／虚拟键盘中无法正确触发KeyboardEvent的可以在此事件中进行封装适配).
-    this.disposable = registerGlobalEventDisposable(window.document.oninput, console.log.bind(null, "oninput"));
-
-    this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
-    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.onBlur(this.contextID) });
+    this.disposable = registerGlobalEventDisposable(window.document, "oninput", console.log.bind(null, "oninput"));
 
     this.disposable = registerEventTargetDisposable(window, "registedWorker", this.onRegistedWorker.bind(this));
     this.disposable = registerEventTargetDisposable(window, "loadedWasm", this.onLoadedWasm.bind(this))
+  }
+
+  registerFocusListeners() {
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.onBlur(this.contextID) });
+
   }
 
   onRegistedWorker() {
@@ -81,6 +83,7 @@ class WebUI extends Controller {
       decoder: "librime",
       remote: false
     });
+    this.initialize();
   }
 
   printErr(args: any) {
@@ -141,7 +144,7 @@ class WebUI extends Controller {
     `, this.containerElem);
   }
 
-  registerIMEViewListener() {
+  registerIMEViewListeners() {
     this.disposable = registerEventTargetDisposable(this.imeView, "activate", () => {
       this.onActivate("zhime", "");
     });
@@ -161,10 +164,11 @@ async function main() {
 
   const controller = new WebUI();
 
-  await controller.initialize();
-
   controller.registerWindowListeners(); 
-  controller.registerIMEViewListener();
+  controller.registerIMEViewListeners();
+  await controller.initialize();
+  controller.registerFocusListeners();
+
 }
 
 main();

@@ -69,11 +69,11 @@ export function registerEmitterEventDisposable<T extends Function>(eventObj: {
   }
 }
 
-export function registerGlobalEventDisposable<T extends Function>(eventObj: any, callback: T): IDisposable {
-  eventObj = callback;
+export function registerGlobalEventDisposable<T extends Function>(eventObj: any, eventName: string, callback: T): IDisposable {
+  eventObj[eventName] = callback;
   return {
     dispose() {
-      eventObj = null;
+      eventObj[eventName] = null;
     }
   }
 }
