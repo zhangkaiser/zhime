@@ -24,6 +24,7 @@ import type { OptionsPage } from "../librime/emscripten/src/options-page";
 import type { IMEWidght } from "./components/ime-widght";
 
 import { Status } from "./model/consts";
+import { registerEmitterEventDisposable, registerEventTargetDisposable, registerGlobalEventDisposable } from "./api/common/event";
 
 
 class WebUI extends Controller {
@@ -53,24 +54,26 @@ class WebUI extends Controller {
 
   registerWindowListeners() {
 
-    // window.document.onkeydown = this.onKeyEventAdapter.bind(this);
-    // window.document.onkeyup = this.onKeyEventAdapter.bind(this);
-    this.editor.onkeydown = this.onKeyEventAdapter.bind(this);
-    this.editor.onkeyup = this.onKeyEventAdapter.bind(this);
+    this.disposable = registerGlobalEventDisposable(this.editor.onkeydown, this.onKeyEventAdapter.bind(this));
+    this.disposable = registerGlobalEventDisposable(this.editor.onkeyup, this.onKeyEventAdapter.bind(this));
+    this.disposable = registerGlobalEventDisposable(window.onclose, this.onDeactivated.bind(this));
 
-    this.editor.editor.on("focus", this.onFocusAdapter.bind(this));
-    this.editor.editor.on("blur", () => {
-      this.onBlur(this.contextID);
-    });
+    // TODO(针对移动端／虚拟键盘中无法正确触发KeyboardEvent的可以在此事件中进行封装适配).
+    this.disposable = registerGlobalEventDisposable(window.document.oninput, console.log.bind(null, "oninput"));
 
-    window.document.oninput = console.log.bind(null, "oninput");
-    window.addEventListener("registedWorker", () => {
-      imeWorker && this.optionsPage.setWorker(imeWorker);
-    });
-  
-    window.addEventListener("loadedWasm", () => {
-      this.loadingElem.hidden = true;
-    });
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.onBlur(this.contextID) });
+
+    this.disposable = registerEventTargetDisposable(window, "registedWorker", this.onRegistedWorker.bind(this));
+    this.disposable = registerEventTargetDisposable(window, "loadedWasm", this.onLoadedWasm.bind(this))
+  }
+
+  onRegistedWorker() {
+    imeWorker && this.optionsPage.setWorker(imeWorker);
+  }
+
+  onLoadedWasm() {
+    this.loadingElem.hidden = true;
   }
 
   setGlobalStorage() {
@@ -138,16 +141,15 @@ class WebUI extends Controller {
   }
 
   registerIMEViewListener() {
-    this.imeView.addEventListener("activate", () => {
+    this.disposable = registerEventTargetDisposable(this.imeView, "activate", () => {
       this.onActivate("zhime", "");
     });
-  
-    this.imeView.addEventListener("show", () => {
+    this.disposable = registerEventTargetDisposable(this.imeView, "show", () => {
       let pos = this.editor.editor.getSelection();
       this.editor.editor.addWidget(this.imeWidght, "bottom", pos[0]);
     });
   
-    this.imeView.addEventListener("commit", (e) => {
+    this.disposable = registerEventTargetDisposable(this.imeView, "commit", (e) => {
       this.editor.editor.insertText((e as CustomEvent).detail.text);
     });
   }
@@ -161,7 +163,6 @@ async function main() {
   await controller.initialize();
 
   controller.registerWindowListeners(); 
-
   controller.registerIMEViewListener();
 }
 

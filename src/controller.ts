@@ -81,6 +81,7 @@ export abstract class Controller extends Disposable implements IMEControllerEven
   }
 
   onDeactivated(engineID: string) {
+    this.disposable.dispose();
     this.model.notifyUpdate("onDeactivated", [engineID]);
   }
 
