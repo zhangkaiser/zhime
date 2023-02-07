@@ -53,11 +53,22 @@ export class Port extends Disposable implements IPort {
     return true;
   }
 
+  protected setPort(port: chrome.runtime.Port) {
+    this.#port = port;  
+  }
+
   disconnect() {
     this.#port?.disconnect();
   }
 
   dispose() {
     this.disconnect();
+  }
+}
+
+export class PortInstance extends Port {
+  constructor(port: chrome.runtime.Port) {
+    super(port.name);
+    this.setPort(port);
   }
 }

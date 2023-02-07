@@ -5,6 +5,7 @@ import { IMessageObjectType } from "src/api/common/message";
 import { LocalStorage } from "src/api/extension/storage";
 import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
 import { ChromeOSView } from "./view/chromeos";
+import { PortInstance } from "./api/extension/port";
 
 
 class Main extends Controller {
@@ -36,6 +37,11 @@ class Main extends Controller {
     this.setCurrentEventName("onMessage");
     this.disposable = registerEvent(runtime.onMessage, (message: IMessageObjectType, sender, sendResponse) => {
 
+    });
+
+    this.disposable = registerEvent(runtime.onConnect, (port) => {
+      let portInstance = new PortInstance(port);
+      this.model.registerDecoderListener(portInstance);
     });
 
     this.disposable = registerEvent(runtime.onInstalled, this.onInstalled.bind(this));

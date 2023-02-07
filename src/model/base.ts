@@ -1,3 +1,4 @@
+import { IPort } from "src/api/common/port";
 import { Status } from "./consts";
 import { PartialViewDataModel } from "./datamodel";
 import { defaultGlobalState, IGlobalState } from "./storage";
@@ -20,6 +21,8 @@ export interface IModel extends EventTarget {
   reset(): void;
 
   clear(): void;
+  
+  registerDecoderListener(decoderPort: IPort): void;
 
 }
 
@@ -52,4 +55,6 @@ export class BaseModel extends EventTarget implements IModel {
     this.focus = false;
     this.contextID = 0;
   }
+
+  registerDecoderListener() {}
 }
