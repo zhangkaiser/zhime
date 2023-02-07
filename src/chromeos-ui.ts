@@ -13,15 +13,6 @@ class Main extends Controller {
     super("chromeos");
   }
 
-  async initialize() {
-    let globalState = await storageInstance.get("global_state");
-    if (globalState && globalState['global_state']) {
-      this.model.globalState = globalState['global_state'];
-    } else {
-      this.openOptionsPage();
-    }
-  }
-
   registerSelfEvents() {
 
   }
@@ -54,7 +45,10 @@ class Main extends Controller {
     const ime = chrome.input.ime;
 
     this.disposable = registerEvent(ime.onActivate, this.onActivate.bind(this));
-    this.disposable = registerEvent(ime.onDeactivated, this.onDeactivated.bind(this));
+    this.disposable = registerEvent(ime.onDeactivated, (engineID) => {
+      this.onDeactivated(engineID);
+      this.disposable.dispose();
+    });
     this.disposable = registerEvent(ime.onFocus, this.onFocus.bind(this));
     this.disposable = registerEvent(ime.onBlur, this.onBlur.bind(this));
     this.disposable = registerEvent(ime.onCandidateClicked, this.onCandidateClicked.bind(this));

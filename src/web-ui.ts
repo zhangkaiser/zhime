@@ -16,7 +16,10 @@ import "./components/edit-header";
 import "../librime/emscripten/src/options-page";
 
 import type { TuiEditor } from "./components/tui-editor";
+import type { EditHeader } from "./components/edit-header";
 import type { WebIMEView } from "./view/webime";
+import type { OptionsPage } from "../librime/emscripten/src/options-page";
+import type { IMEWidght } from "./components/ime-widght";
 
 import { Status } from "./model/consts";
 
@@ -26,44 +29,52 @@ class WebUI extends Controller {
   requestId = 0;
   contextID = 0;
 
+  containerElem = document.getElementById("container")!;
+  loadingElem = document.getElementById("loading") as HTMLDivElement;
+  imeView: WebIMEView;
+  editor: TuiEditor;
+  optionsPage: OptionsPage;
+  edits: EditHeader;
+  imeWidght: IMEWidght;
+
+
   constructor() {
     super("web");
-  }
-  
-  initialize() {
     this.render();
-
-    this.loadIMEStateStorage();
-    this.createWorker();
-    // 在页面被创建时构建。
-    // - 初始化IME。
-    // - 用户初始化。
+    this.imeView = document.createElement("ime-input-view") as WebIMEView;
+    this.editor = document.getElementById("editor") as TuiEditor;
+    this.optionsPage = document.getElementById("ime-options") as OptionsPage;
+    this.edits = document.getElementById("edits") as EditHeader;
+    this.imeWidght = this.imeView.getImeWidghtElem() as IMEWidght;
+    this.view = this.imeView;
   }
 
-  createWorker() {
+  registerWindowListeners() {
 
-  }
+    // window.document.onkeydown = this.onKeyEventAdapter.bind(this);
+    // window.document.onkeyup = this.onKeyEventAdapter.bind(this);
+    this.editor.onkeydown = this.onKeyEventAdapter.bind(this);
+    this.editor.onkeyup = this.onKeyEventAdapter.bind(this);
 
-  registerWindowEvents() {
-
-    window.document.onkeydown = this.onKeyEventAdapter.bind(this);
-    window.document.onkeyup = this.onKeyEventAdapter.bind(this);
-
-    window.onfocus = this.onFocusAdapter.bind(this);
-    window.onblur = () => {
+    this.editor.editor.on("focus", this.onFocusAdapter.bind(this));
+    this.editor.editor.on("blur", () => {
       this.onBlur(this.contextID);
-    }
+    });
 
-    window.document.oninput = console.log.bind(null, "oninput"); 
+    window.document.oninput = console.log.bind(null, "oninput");
+    window.addEventListener("registedWorker", () => {
+      imeWorker && this.optionsPage.setWorker(imeWorker);
+    });
+  
+    window.addEventListener("loadedWasm", () => {
+      this.loadingElem.hidden = true;
+    });
   }
 
-  loadIMEStateStorage() {
-    this.model.globalState = {
+  setGlobalStorage() {
+    storageInstance.set("global_state", {
       decoder: "librime"
-    }
-  }
-
-  render() {
+    });
   }
 
   printErr(args: any) {
@@ -99,68 +110,54 @@ class WebUI extends Controller {
     let context = {contextID: this.contextID};
     this.onFocus(context as any);
   }
+
+  showOptionsPage() {
+    this.edits.showPage("rightEdit");
+  }
+
+  openOptionsPage() {
+    this.setGlobalStorage();
+    this.showOptionsPage();
+  }
+
+  render() {
+    render(html`
+    <tui-editor id="editor"></tui-editor>
+    <edit-header id="edits">
+      <div slot="left-name">编辑器设置</div>
+      <div slot="left">none</div>
+      <div slot="right-name"><span>输入法设置</span></div>
+      <options-page slot="right" id="ime-options"></options-page>
+    </edit-header>
+    `, this.containerElem);
+  }
+
+  registerIMEViewListener() {
+    this.imeView.addEventListener("activate", () => {
+      this.onActivate("zhime", "");
+    });
+  
+    this.imeView.addEventListener("show", () => {
+      let pos = this.editor.editor.getSelection();
+      this.editor.editor.addWidget(this.imeWidght, "bottom", pos[0]);
+    });
+  
+    this.imeView.addEventListener("commit", (e) => {
+      this.editor.editor.insertText((e as CustomEvent).detail.text);
+    });
+  }
 }
 
-function main() {
+async function main() {
   setGlobalLocalStorageInstance(LocalStorage<any>);
+
   const controller = new WebUI();
-  controller.initialize();
 
-  controller.registerWindowEvents();
+  await controller.initialize();
 
-  const container = document.getElementById("container");
+  controller.registerWindowListeners(); 
 
-  render(html`
-  <div id="loading">正在加载依赖中</div>
-  <tui-editor id="editor"></tui-editor>
-  <edit-header>
-    <div slot="left-name">编辑器设置</div>
-    <div slot="left">none</div>
-    <div slot="right-name"><span>输入法设置</span></div>
-    <options-page slot="right" id="ime-options"></options-page>
-
-  </edit-header>
-  `, container!);
-
-  const imeView = document.createElement("ime-input-view") as WebIMEView;
-  const editorElem = document.getElementById("editor") as TuiEditor;
-  const optionsPage = document.getElementById("ime-options") as any;
-  const loading = document.getElementById("loading") as HTMLDivElement;
-  loading.style.position = "fixed";
-  loading.style.top = "0";
-  loading.style.left = "0";
-  loading.style.right = "0";
-  loading.style.bottom = "0";
-  loading.style.zIndex = "214783647";
-  loading.style.lineHeight = "100vh";
-  loading.style.textAlign = "center";
-  loading.style.backgroundColor = "#fff";
-
-  
-  window.addEventListener("registedWorker", () => {
-    imeWorker && optionsPage.setWorker(imeWorker);
-  });
-
-  window.addEventListener("loadedWasm", () => {
-    loading.hidden = true;
-  })
-
-  let imeWidght = imeView.getImeWidghtElem();
-
-  imeView.addEventListener("activate", () => {
-    controller.onActivate("zhime", "");
-  });
-
-  imeView.addEventListener("show", () => {
-    let pos = editorElem.editor.getSelection();
-    editorElem.editor.addWidget(imeWidght, "bottom", pos[0]);
-  });
-
-  imeView.addEventListener("commit", (e) => {
-    editorElem.editor.insertText((e as CustomEvent).detail.text);
-  })
-  
-  controller.view = imeView; 
+  controller.registerIMEViewListener();
 }
 
 main();

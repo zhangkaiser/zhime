@@ -1,9 +1,9 @@
 import { LitElement, html, css, render } from "lit";
-import { property, customElement, state } from "lit/decorators.js";
+import { property, customElement, state, query } from "lit/decorators.js";
 
 
 @customElement("edit-header")
-class EditHeader extends LitElement {
+export class EditHeader extends LitElement {
   static styles = css`
   .header-bg {
 
@@ -37,6 +37,13 @@ class EditHeader extends LitElement {
     }
   }
 
+  showPage(pageTag: "leftEdit" | "rightEdit") {
+    return this[pageTag].hidden = false;
+  }
+
+  @query("#left") protected leftEdit!: HTMLDivElement;
+  @query("#right") protected rightEdit!: HTMLDivElement;
+
   render() {
     return html`
     <div class="header-bg">
@@ -45,7 +52,7 @@ class EditHeader extends LitElement {
           <div class="" @click=${this.showEditPage}>
             <slot name="left-name"></slot>
           </div>
-          <section class="edit-container" hidden>
+          <section id="left" class="edit-container" hidden>
             <slot name="left"></slot>
           </section>
         </div>
@@ -57,7 +64,7 @@ class EditHeader extends LitElement {
           <div class="" @click=${this.showEditPage}>
             <slot name="right-name"></slot>
           </div>
-          <section class="edit-container" hidden>
+          <section id="right" class="edit-container" hidden>
             <slot name="right"></slot>
           </section>
         </div>

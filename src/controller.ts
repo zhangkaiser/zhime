@@ -9,6 +9,7 @@ import { IView } from "src/view/base";
 import { KeyRexExp, Status } from "src/model/consts";
 import { WebModel } from "src/model/web";
 import { Model } from "./model/model";
+import { storageInstance } from "./model/storage";
 
 
 type ActionType = [
@@ -23,7 +24,7 @@ type ActionType = [
   any[] // action function args.
 ];
 
-export class Controller extends Disposable implements IMEControllerEventInterface {
+export abstract class Controller extends Disposable implements IMEControllerEventInterface {
 
   model: IModel;
   view: IView = new View();
@@ -47,6 +48,22 @@ export class Controller extends Disposable implements IMEControllerEventInterfac
     this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
 
   }
+  
+  async initialize() {
+    await this.loadGlobalState();
+  }
+
+  protected async loadGlobalState() {
+    let globalState = await storageInstance.get("global_state");
+    if (globalState && globalState['global_state']) {
+      this.model.globalState = globalState['global_state'];
+    } else {
+      this.openOptionsPage();
+    }
+  }
+
+  abstract openOptionsPage():void;
+  
 
   setState() {
     
