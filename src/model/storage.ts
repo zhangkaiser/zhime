@@ -5,10 +5,12 @@ import { ILocalStorageConstructor, LocalStorage } from "src/api/common/storage";
  */
 export interface IGlobalState {
   readonly decoder: string;
+  readonly remote: boolean;
 }
 
 export const defaultGlobalState = {
-  decoder: ""
+  decoder: "",
+  remote: true
 }
 
 export interface IDecoderItemModel {

@@ -78,7 +78,8 @@ class WebUI extends Controller {
 
   setGlobalStorage() {
     storageInstance.set("global_state", {
-      decoder: "librime"
+      decoder: "librime",
+      remote: false
     });
   }
 

@@ -65,17 +65,27 @@ export class ChromeOSModel extends Disposable implements IModel {
     ) {
       this.eventDispatcher.dispatchMessage = (eventName, value) => {
         if (eventName === "onKeyEvent") {
-          this.dispatchEvent(new CustomEvent("onmessage", {detail: [
-            {data: {type: "keyEventHandled", value: [[value[2], false]]}},
-            null, 
-            true
-          ]}));
+          console.log("Not found decoder.");
+          this.dispatchEvent(
+            new CustomEvent("onmessage", 
+            {detail: [
+              { 
+                data: { type: "keyEventHandled", value: [[value[2], false]] }
+              },
+              null,
+              true ]
+            })
+          );
         }
         return [true];
       }
       return;
     }
-    let decoderID = this.globalState.decoder;
+    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
+
+    if (!enableRemoteDecoder) {
+      return;
+    }
 
     let decoderPort = new Port(decoderID);
 
@@ -91,6 +101,10 @@ export class ChromeOSModel extends Disposable implements IModel {
       clearInterval(this.#intervalID);
     }
 
+    this.registerDecoderListener(decoderPort);
+  }
+
+  registerDecoderListener(decoderPort: Port) {
     decoderPort.onmessage = (msg, port) => {
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }
