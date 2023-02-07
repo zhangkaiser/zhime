@@ -1,4 +1,4 @@
-import { Disposable } from "src/api/common/disposable";
+import { Disposable, IDisposable } from "src/api/common/disposable";
 import { IPort } from "./port";
 
 export interface IEventDispatcherHandler {
@@ -56,5 +56,33 @@ export class RemoteEventDispatcher extends Disposable implements IEventDispatche
 export class EventDispatcher extends Disposable implements IEventDispatcher {
   dispatchMessage(type: string, value: any[]) {
     return [true];
+  }
+}
+
+export function registerEmitterEventDisposable<T extends Function>(eventObj: {
+  on: (eventName: string, handler: any) => void, off:(eventName: string) => void}, eventName: string, callback: T): IDisposable {
+  eventObj.on(eventName, callback);
+  return {
+    dispose() {
+      eventObj.off(eventName);
+    }
+  }
+}
+
+export function registerGlobalEventDisposable<T extends Function>(eventObj: any, callback: T): IDisposable {
+  eventObj = callback;
+  return {
+    dispose() {
+      eventObj = null;
+    }
+  }
+}
+
+export function registerEventTargetDisposable<T extends Function>(eventObj: EventTarget, eventName: string, callback: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+  eventObj.addEventListener(eventName, callback, options);
+  return {
+    dispose() {
+      eventObj.removeEventListener(eventName, callback, options);
+    }
   }
 }
