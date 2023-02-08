@@ -40,6 +40,9 @@ class WebUI extends Controller {
   edits: EditHeader;
   imeWidght: IMEWidght;
 
+  _lastKeyIsShift = false;
+  shiftLock = false;
+
 
   constructor() {
     super("web");
@@ -94,7 +97,7 @@ class WebUI extends Controller {
     this.requestId++;
     const {ctrlKey, altKey, shiftKey, code, key, metaKey, type} = e;
     const keyData = {
-      ctrlKey, altKey, shiftKey,
+      ctrlKey, altKey, shiftKey,  
       type, code, key, 
       metaKey,
     }
@@ -104,6 +107,24 @@ class WebUI extends Controller {
     }
 
     if (key === "Process") return; // OS IME processor.
+
+    if (ctrlKey && !altKey && !shiftKey && ['`', 'Control'].indexOf(keyData.key) === -1) {
+      return;
+    }
+
+    if (type === "keydown") {
+      if (this.handleShiftKey(keyData) || this.shiftLock) return ;
+    } else {
+      if (this._lastKeyIsShift) {
+        this.shiftLock = !this.shiftLock;
+      }
+      if (this.model.status !== Status.INITED) {
+        this.shiftLock = false;
+      }
+      if (key === "Shift") {
+        return;
+      }
+    }
     
     let requestId = '' + this.requestId;
     if (!this.onKeyEvent('zhime', keyData, requestId)) {
@@ -112,6 +133,23 @@ class WebUI extends Controller {
       }
     }
     e.preventDefault();
+  }
+
+  handleShiftKey(keyEvent: chrome.input.ime.KeyboardEvent) {
+    if (keyEvent.shiftKey && keyEvent.key === "Shift") {
+      this._lastKeyIsShift = keyEvent.code === "ShiftLeft";
+
+      if (!this._lastKeyIsShift) {
+        keyEvent.key = "Shift_R";
+        keyEvent.shiftKey = false;
+      }
+    } else {
+      this._lastKeyIsShift = false;
+    }
+
+    if (/^[A-Z]$/.test(keyEvent.key)) return true;
+
+    return false;
   }
 
   onFocusAdapter(e: Event) {
