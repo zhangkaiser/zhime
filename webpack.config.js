@@ -18,7 +18,8 @@ module.exports = {
   entry: {
     background: './src/chromeos-ui.ts',
    "web/index": "./src/web-ui.ts",
-    options: "./src/options.ts"
+    options: "./src/options.ts",
+    main: "./src/decoder-page.ts"
   },
   mode,
   output: {
@@ -50,6 +51,7 @@ module.exports = {
       patterns: [
         {from: "./assets/manifest/chromeos-ui.json", to: "./manifest.json"},
         {from: "./assets/html/options.html", to: "./options.html"},
+        {from: "./assets/html/main.html", to: "./main.html"},
         {from: "./assets/html/index.html", to: "./web/index.html"},
         {from: "./librime/out/worker", to: "./web/decoders"},
         {from: "./librime/out/data", to: "./web/data"},
