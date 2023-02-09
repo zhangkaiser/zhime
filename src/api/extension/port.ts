@@ -23,6 +23,12 @@ export class Port extends Disposable implements IPort {
       return false;
     }
 
+    this.registerEvent();
+
+    return true;
+  }
+
+  registerEvent() {
     this.disposable = registerEventDisposable(this.#port!.onMessage, (msg: IMessageObjectType, port) => {  
       if (this.onmessage) this.onmessage(msg, this); 
       else console.error("No register port `onmessage` handler.", this.name);
@@ -32,8 +38,6 @@ export class Port extends Disposable implements IPort {
       this.#port = undefined;
       if (this.ondisconnect) this.ondisconnect(this);
     });
-
-    return true;
   }
 
   reconnect() {
@@ -54,7 +58,8 @@ export class Port extends Disposable implements IPort {
   }
 
   protected setPort(port: chrome.runtime.Port) {
-    this.#port = port;  
+    this.#port = port;
+    this.registerEvent();
   }
 
   disconnect() {
@@ -70,5 +75,10 @@ export class PortInstance extends Port {
   constructor(port: chrome.runtime.Port) {
     super(port.name);
     this.setPort(port);
+  }
+
+  reconnect() {
+    console.info("Port instance not support reconnect!");
+    return false;
   }
 }
