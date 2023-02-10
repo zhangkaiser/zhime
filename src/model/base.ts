@@ -25,41 +25,5 @@ export interface IModel extends EventTarget {
   reset(): void;
 
   clear(): void;
-  
-  registerDecoderListener(decoderPort: IPort): void;
-
 }
 
-export class BaseModel extends EventTarget implements IModel {
-  engineID: string = "zhime";
-  contextID: number = 0;
-  focus: boolean = false;
-  connected = false;
-  status = Status.NO;
-
-  globalState = defaultGlobalState;
-
-  #states: PartialViewDataModel = {};
-
-  set states(value: PartialViewDataModel) {
-    this.#states = value;
-  }
-
-  get states() {
-    return this.#states;
-  }
-
-  notifyUpdate(eventName: string, value: any[]) {
-    return true;
-  }
-
-  reset() {
-  }
-
-  clear() {
-    this.focus = false;
-    this.contextID = 0;
-  }
-
-  registerDecoderListener() {}
-}

@@ -1,16 +1,17 @@
 import { IIMEMethodUnion, IMEControllerEventInterface, imeEventList, imeMethodList } from "src/consts/chromeosIME";
-import { IModel, BaseModel } from "src/model/base";
-import { ChromeOSModel, IIMEMethodRenderDetail } from "src/model/chromeos";
+import { IModel } from "src/model/base";
+import { Model, IIMEMethodRenderDetail } from "src/model/model";
+
+import { registerEventDisposable } from "src/api/extension/event";
 import { IEnv } from "src/consts/env";
 import { Disposable } from "src/api/common/disposable";
 import { PartialViewDataModel } from "src/model/datamodel";
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
 import { KeyRexExp, Status } from "src/model/consts";
-import { WebModel } from "src/model/web";
-import { Model } from "./model/model";
 import { storageInstance } from "./model/storage";
 import { PortInstance } from "./api/extension/port";
+import { EventEnum } from "./consts/event";
 
 
 type ActionType = [
@@ -32,26 +33,17 @@ export abstract class Controller extends Disposable {
 
   #keyActionTable: ActionType[] = [];
 
-  constructor(public env: IEnv) {
+  constructor(readonly env: IEnv) {
     super();
-
-    switch (env) {
-      case "chromeos":
-        this.model = new ChromeOSModel;
-        break;
-      case "web":
-        this.model = new WebModel;
-        break;
-      default:
-        this.model = new Model;
-    }
-
-    this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
-
+    this.model = new Model(env);
   }
   
   async initialize() {
     await this.loadGlobalState();
+  }
+
+  registerModelEvent() {
+    this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
   }
 
   protected async loadGlobalState() {
@@ -81,12 +73,16 @@ export abstract class Controller extends Disposable {
 
   protected extEvents = {
     onConnect: (port: chrome.runtime.Port) => {
-      let pagePortInstance = new PortInstance(port);
-      pagePortInstance.ondisconnect = () => {
+      if (!this.model.connected) {
+        this.dispatchEvent(new Event(EventEnum.decoderOpened));
+        this.model.connected = true;
+      }
+
+      this.setCurrentEventName(port.name);
+      this.disposable = registerEventDisposable(port.onDisconnect, () => {
         this.model.connected = false;
-      };
-      this.model.connected = true;
-      this.model.registerDecoderListener(pagePortInstance);
+        this.dispatchEvent(new Event(EventEnum.decoderClosed));
+      });
     }
   }
 
@@ -121,6 +117,10 @@ export abstract class Controller extends Disposable {
 
   protected imeEvents = {
     onKeyEvent: (engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) => {
+      if (this.model.status == Status.NO) {
+        return true;
+      }
+
       if (this.preProcessKey(keyData)) {
         return true;
       }
