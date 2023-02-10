@@ -6,15 +6,16 @@ async function main() {
   setGlobalLocalStorageInstance(LocalStorage<any>);
   
   let controller = new ChromeOSController();
+
+  await controller.initialize();
+
   controller.registerLifecycleEvent();
   controller.registerConnectionEvent();
 
   controller.registerIMElifecycleEvent();
   controller.registerIMEEvent();
   controller.registerSelfEvents();
-  controller.registerModelEvents();
-
-  await controller.initialize();
+  controller.registerModelEvent();
 
 }
 

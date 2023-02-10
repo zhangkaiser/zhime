@@ -5,7 +5,7 @@ import { IMessageObjectType } from "src/api/common/message";
 import { LocalStorage } from "src/api/extension/storage";
 import { ChromeOSView } from "./view/chromeos";
 import { PortInstance } from "./api/extension/port";
-
+import { EventEnum } from "./consts/event";
 
 export class ChromeOSController extends Controller {
 
@@ -15,11 +15,12 @@ export class ChromeOSController extends Controller {
   }
 
   registerSelfEvents() {
-
-  }
-
-  registerModelEvents() {
-
+    this.addEventListener(EventEnum.decoderOpened, () => {
+      this.unregisterIMEEvent();
+    });
+    this.addEventListener(EventEnum.decoderClosed, () => {
+      this.registerIMEEvent();
+    });
   }
 
   registerEnternalConnectionEvent() {
@@ -50,14 +51,14 @@ export class ChromeOSController extends Controller {
 
   registerIMElifecycleEvent() {
     const ime = chrome.input.ime;
-    registerEvent(ime.onActivate, async (engineID, screen) => {
+    this.disposable = registerEvent(ime.onActivate, async (engineID, screen) => {
       await this.loadGlobalState();
       if (!this.model.globalState.remote && !this.model.connected) {
         this.createDecoderPage();
       }
       this.imeLifecycles.onActivate(engineID, screen);
     });
-    registerEvent(ime.onDeactivated, this.imeLifecycles.onDeactivated);
+    this.disposable = registerEvent(ime.onDeactivated, this.imeLifecycles.onDeactivated);
     this.disposable = registerEvent(ime.onFocus, this.imeLifecycles.onFocus);
     this.disposable = registerEvent(ime.onBlur, this.imeLifecycles.onBlur);
     this.disposable = registerEvent(ime.onReset, this.imeLifecycles.onReset);
@@ -76,7 +77,13 @@ export class ChromeOSController extends Controller {
     }) as any);
 
     this.setCurrentEventName("onSurroundingTextChanged");
-    typeof window === "undefined" && (this.disposable = registerEvent(ime.onSurroundingTextChanged, this.imeEvents.onSurroundingTextChanged.bind(this)));
+    this.disposable = registerEvent(ime.onSurroundingTextChanged, this.imeEvents.onSurroundingTextChanged.bind(this));
+  }
+
+  unregisterIMEEvent() {
+    ChromeOSController.dispose(this, "onCandidateClicked");
+    ChromeOSController.dispose(this, "onKeyEvent");
+    ChromeOSController.dispose(this, "onSurroundingTextChanged");
   }
 
   createDecoderPage() {
