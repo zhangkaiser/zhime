@@ -5,8 +5,7 @@
  * - 处理交互
  */
 import { Controller } from "./controller";
-import { LocalStorage } from "src/api/common/storage";
-import { setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
+import { storageInstance } from "./model/storage";
 import { IView } from "./view/base";
 import { html, render } from "lit";
 
@@ -27,7 +26,7 @@ import { Status } from "./model/consts";
 import { registerEmitterEventDisposable, registerEventTargetDisposable, registerGlobalEventDisposable } from "./api/common/event";
 
 
-class WebUI extends Controller {
+export class WebController extends Controller {
 
   requestId = 0;
   contextID = 0;
@@ -43,34 +42,54 @@ class WebUI extends Controller {
   _lastKeyIsShift = false;
   shiftLock = false;
 
-
   constructor() {
     super("web");
+
     this.render();
+
     this.imeView = document.createElement("ime-input-view") as WebIMEView;
     this.editor = document.getElementById("tui-editor") as TuiEditor;
     this.optionsPage = document.getElementById("ime-options") as OptionsPage;
     this.edits = document.getElementById("edits") as EditHeader;
     this.imeWidght = this.imeView.getImeWidghtElem() as IMEWidght;
+
     this.view = this.imeView;
   }
 
-  registerWindowListeners() {
+  registerIMEEvent() {
     this.disposable = registerGlobalEventDisposable(this.editor, "onkeydown", this.onKeyEventAdapter.bind(this));
     this.disposable = registerGlobalEventDisposable(this.editor, "onkeyup", this.onKeyEventAdapter.bind(this));
-    this.disposable = registerGlobalEventDisposable(window, "onclose", this.onDeactivated.bind(this));
-
-    // TODO(针对移动端／虚拟键盘中无法正确触发KeyboardEvent的可以在此事件中进行封装适配).
-    this.disposable = registerGlobalEventDisposable(window.document, "oninput", console.log.bind(null, "oninput"));
-
-    this.disposable = registerEventTargetDisposable(window, "registedWorker", this.onRegistedWorker.bind(this));
-    this.disposable = registerEventTargetDisposable(window, "loadedWasm", this.onLoadedWasm.bind(this))
   }
 
-  registerFocusListeners() {
-    this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
-    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.onBlur(this.contextID) });
+  registerIMElifecycleEvent() {
+    this.disposable = registerEventTargetDisposable(this.imeView, "activate", () => {
+      this.imeLifecycles.onActivate("zhime", "");
+    });
+    this.disposable = registerGlobalEventDisposable(window, "onclose", this.imeLifecycles.onDeactivated);
 
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.imeLifecycles.onBlur(this.contextID) });
+  }
+
+  registerWindowListeners() {
+    // TODO(针对移动端／虚拟键盘中无法正确触发KeyboardEvent的可以在此事件中进行封装适配).
+    // this.disposable = registerGlobalEventDisposable(window.document, "oninput", console.log.bind(null, "oninput"));
+
+    this.disposable = registerEventTargetDisposable(window, "registedWorker", this.onRegistedWorker.bind(this));
+    this.disposable = registerEventTargetDisposable(window, "loadedWasm", this.onLoadedWasm.bind(this));
+  }
+
+
+  registerIMEViewListeners() {
+    
+    this.disposable = registerEventTargetDisposable(this.imeView, "show", () => {
+      let pos = this.editor.editor.getSelection();
+      this.editor.editor.addWidget(this.imeWidght, "bottom", pos[0]);
+    });
+  
+    this.disposable = registerEventTargetDisposable(this.imeView, "commit", (e) => {
+      this.editor.editor.insertText((e as CustomEvent).detail.text);
+    });
   }
 
   onRegistedWorker() {
@@ -127,7 +146,7 @@ class WebUI extends Controller {
     }
     
     let requestId = '' + this.requestId;
-    if (!this.onKeyEvent('zhime', keyData, requestId)) {
+    if (!this.imeEvents.onKeyEvent('zhime', keyData, requestId)) {
       if (this.model.status === Status.INITED && (key.length != 1 || key == ' ' || /^[0-9]/.test(key))) {
         return;
       }
@@ -155,7 +174,7 @@ class WebUI extends Controller {
   onFocusAdapter(e: Event) {
     this.contextID++;
     let context = {contextID: this.contextID};
-    this.onFocus(context as any);
+    this.imeLifecycles.onFocus(context as any);
   }
 
   showOptionsPage() {
@@ -181,32 +200,4 @@ class WebUI extends Controller {
     </edit-header>
     `, this.containerElem);
   }
-
-  registerIMEViewListeners() {
-    this.disposable = registerEventTargetDisposable(this.imeView, "activate", () => {
-      this.onActivate("zhime", "");
-    });
-    this.disposable = registerEventTargetDisposable(this.imeView, "show", () => {
-      let pos = this.editor.editor.getSelection();
-      this.editor.editor.addWidget(this.imeWidght, "bottom", pos[0]);
-    });
-  
-    this.disposable = registerEventTargetDisposable(this.imeView, "commit", (e) => {
-      this.editor.editor.insertText((e as CustomEvent).detail.text);
-    });
-  }
 }
-
-async function main() {
-  setGlobalLocalStorageInstance(LocalStorage<any>);
-
-  const controller = new WebUI();
-
-  controller.registerWindowListeners(); 
-  controller.registerIMEViewListeners();
-  await controller.initialize();
-  controller.registerFocusListeners();
-
-}
-
-main();

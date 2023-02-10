@@ -16,7 +16,7 @@ export class ChromeOSModel extends Disposable implements IModel {
 
   contextID: number = 0;
   status = Status.NO;
-
+  connected = false;
   #focus: boolean = false;
   #intervalID = 0;
 

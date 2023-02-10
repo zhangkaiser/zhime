@@ -10,6 +10,7 @@ import { KeyRexExp, Status } from "src/model/consts";
 import { WebModel } from "src/model/web";
 import { Model } from "./model/model";
 import { storageInstance } from "./model/storage";
+import { PortInstance } from "./api/extension/port";
 
 
 type ActionType = [
@@ -24,7 +25,7 @@ type ActionType = [
   any[] // action function args.
 ];
 
-export abstract class Controller extends Disposable implements IMEControllerEventInterface {
+export abstract class Controller extends Disposable {
 
   model: IModel;
   view: IView = new View();
@@ -69,70 +70,85 @@ export abstract class Controller extends Disposable implements IMEControllerEven
     
   }
 
-  onInstalled(details: chrome.runtime.InstalledDetails) {
+  protected extLifecycles = {
+    onInstalled: (details: chrome.runtime.InstalledDetails) => {
     
-  } 
+    },
+    onUpdateAvaiable: () => {
+    
+    }
+  }
+
+  protected extEvents = {
+    onConnect: (port: chrome.runtime.Port) => {
+      let pagePortInstance = new PortInstance(port);
+      pagePortInstance.ondisconnect = () => {
+        this.model.connected = false;
+      };
+      this.model.connected = true;
+      this.model.registerDecoderListener(pagePortInstance);
+    }
+  }
+
+  protected imeLifecycles = {
+    onActivate: (engineID: string, screen: string) => {
+      this.model.engineID = engineID;
+      this.#keyActionTable = this.getKeyActionTable();
+      this.model.reset();
+      this.model.notifyUpdate("onActivate", [engineID, screen]);
+    },
   
-  onActivate(engineID: string, screen: string) {
-    this.model.engineID = engineID;
-    this.#keyActionTable = this.getKeyActionTable();
-    this.model.reset();
-    this.model.notifyUpdate("onActivate", [engineID, screen]);
-  }
-
-  onDeactivated(engineID: string) {
-    this.disposable.dispose();
-    this.model.notifyUpdate("onDeactivated", [engineID]);
-  }
-
-  onReset(engineID: string) {
-    this.model.notifyUpdate("onReset", [engineID]);
-  }
-
-  onBlur(contextID: number) {
-    this.model.focus = false;
-    this.model.notifyUpdate("noBlur", [contextID]);
-    this.model.status = Status.NO;
-  }
-
-  onFocus(context: chrome.input.ime.InputContext) {
-    this.model.focus = true;
-    this.model.status = Status.INITED;
-    this.model.notifyUpdate("onFocus", [context]);
-  }
-
-  onKeyEvent(engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) {
-    if (this.preProcessKey(keyData)) {
-      return true;
+    onDeactivated: (engineID: string) => {
+      this.model.notifyUpdate("onDeactivated", [engineID]);
+    },
+  
+    onReset: (engineID: string) => {
+      this.model.notifyUpdate("onReset", [engineID]);
+    },
+  
+    onBlur: (contextID: number) => {
+      this.model.focus = false;
+      this.model.notifyUpdate("noBlur", [contextID]);
+      this.model.status = Status.NO;
+    },
+  
+    onFocus: (context: chrome.input.ime.InputContext) => {
+      this.model.focus = true;
+      this.model.status = Status.INITED;
+      this.model.notifyUpdate("onFocus", [context]);
     }
+  }
 
-    if (this.#keyActionTable && this.handleKeyInActionTable(keyData, this.#keyActionTable)) {
-      return true;
+  protected imeEvents = {
+    onKeyEvent: (engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) => {
+      if (this.preProcessKey(keyData)) {
+        return true;
+      }
+  
+      if (this.#keyActionTable && this.handleKeyInActionTable(keyData, this.#keyActionTable)) {
+        return true;
+      }
+  
+      if (this.isAllowNotifyKeyEvent(keyData)) {
+        this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
+      } else {
+        this.setData({ "keyEventHandled": [requestId, false] });
+      }
+  
+      return false;
+    },
+    onCandidateClicked: (engineID: string, candidateID: number, button: "left" | "middle" | "right") => {
+      this.model.notifyUpdate("onCandidateClicked", [engineID, candidateID, button]);
+    },
+    onSurroundingTextChanged: (engineID: string, surroundingInfo: chrome.input.ime.SurroundingTextInfo) => {
+      this.model.notifyUpdate("onSurroundingTextChanged", [engineID, surroundingInfo]);
+    },
+    onInputContextUpdate: (context: chrome.input.ime.InputContext) => {
+      this.model.notifyUpdate("onInputContextUpdate", [context]);
+    },
+    onMenuItemActivated: (engineID: string, name: string) => {
+      this.model.notifyUpdate("onMenuItemActivated", [engineID, name]);
     }
-
-    if (this.isAllowNotifyKeyEvent(keyData)) {
-      this.model.notifyUpdate("onKeyEvent", [engineID, keyData, requestId]);
-    } else {
-      this.setData({ "keyEventHandled": [requestId, false] });
-    }
-
-    return false; 
-  }
-
-  onCandidateClicked(engineID: string, candidateID: number, button: "left" | "middle" | "right") {
-    this.model.notifyUpdate("onCandidateClicked", [engineID, candidateID, button]);
-  }
-
-  onInputContextUpdate(context: chrome.input.ime.InputContext) {
-    this.model.notifyUpdate("onInputContextUpdate", [context]);
-  }
-
-  onSurroundingTextChanged(engineID: string, surroundingInfo: chrome.input.ime.SurroundingTextInfo) {
-    this.model.notifyUpdate("onSurroundingTextChanged", [engineID, surroundingInfo]);
-  }
-
-  onMenuItemActivated(engineID: string, name: string) {
-    this.model.notifyUpdate("onMenuItemActivated", [engineID, name]);
   }
 
   preProcessKey(keyData: chrome.input.ime.KeyboardEvent) {

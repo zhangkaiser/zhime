@@ -5,11 +5,15 @@ import { defaultGlobalState, IGlobalState } from "./storage";
 
 export interface IModel extends EventTarget {
   
+  /** The engine id of IME. */
   engineID: string;
+  /** The input context id of IME. */
   contextID: number;
-
+  /** The focus status of IME. */
   focus: boolean;
-
+  /** The main decoder connection status. */ 
+  connected: boolean;
+  /** The input status of IME. */
   status: Status;
 
   states?: PartialViewDataModel;
@@ -30,6 +34,7 @@ export class BaseModel extends EventTarget implements IModel {
   engineID: string = "zhime";
   contextID: number = 0;
   focus: boolean = false;
+  connected = false;
   status = Status.NO;
 
   globalState = defaultGlobalState;
