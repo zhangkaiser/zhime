@@ -5,6 +5,9 @@ export type DeocderType = "librime" | "shuangpin";
 export const webDecoders = {
   librime: { 
     scripts: "./decoders/pthread.js"
+  },
+  shuangpin: {
+    scripts: "./decoders/shuangpin.js"
   }
 }
 
