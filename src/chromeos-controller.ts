@@ -23,7 +23,7 @@ export class ChromeOSController extends Controller {
     });
   }
 
-  registerEnternalConnectionEvent() {
+  registerExternalConnectionEvent() {
     // Register other IME UI proxy. eg. virtual keyboard, linux(crostini).
     this.setCurrentEventName("onConnectExternal");
     this.disposable = registerEvent(chrome.runtime.onConnectExternal, (port) => {

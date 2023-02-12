@@ -155,7 +155,7 @@ export class Model extends Disposable implements IModel {
   }
 
   [Symbol.toStringTag]() {
-    return "ChromeOSModel";
+    return "Model";
   }
   
 }
