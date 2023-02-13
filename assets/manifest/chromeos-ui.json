@@ -1,7 +1,7 @@
 {
-  "name": "ZHIME",
+  "name": "ZHIME & Chrome OS中文输入法",
   "version": "0.0.1",
-  "description": "Chrome OS IME Proxy.",
+  "description": "适用于Chrome OS中文的输入法，内置Rime解析方案，支持高度的自定义输入方案。",
   "manifest_version": 3,
   "background": {
     "service_worker": "background.js"
@@ -14,12 +14,15 @@
   "host_permissions": [
     "https://zhime.pinquapp.com/?*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "input_components": [
     {
       "name": "ZHIME",
       "type": "ime",
       "id": "zhime",
-      "description": "Chrome OS IME Proxy.",
+      "description": "Chrome OS Chinese Input Method.",
       "language": "zh",
       "layouts": ["us"]
     }
