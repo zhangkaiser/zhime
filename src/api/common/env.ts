@@ -48,6 +48,7 @@ if (typeof location === "object") {
 
 export const isWeb = _isWeb;
 export const isWebWorker = (_isWeb && typeof globalThis.importScripts === 'function');
+export const isExt = _isExt;
 export const isIOS = _isIOS;
 export const isMobile = _isMobile;
 export const platform = _platform;
