@@ -2,9 +2,9 @@
 import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
 import { IMessageObjectType } from "src/api/common/message";
-import { LocalStorage } from "src/api/extension/storage";
+import { isWebWorker } from "src/api/common/env";
+
 import { ChromeOSView } from "./view/chromeos";
-import { PortInstance } from "./api/extension/port";
 import { EventEnum } from "./consts/event";
 
 export class ChromeOSController extends Controller {
@@ -53,7 +53,7 @@ export class ChromeOSController extends Controller {
     const ime = chrome.input.ime;
     this.disposable = registerEvent(ime.onActivate, async (engineID, screen) => {
       await this.loadGlobalState();
-      if (!this.model.globalState.remote && !this.model.connected) {
+      if (!this.model.globalState.remote && !this.model.connected && isWebWorker) {
         this.createDecoderPage();
       }
       this.imeLifecycles.onActivate(engineID, screen);
@@ -91,19 +91,10 @@ export class ChromeOSController extends Controller {
       active: true,
       url: "./main.html",
     }, () => {
-      console.log("open Decoder page.");
+      console.log("Opened the decoder page.");
     });
   }
 
-
-  addIMEControlerMethodDispatcher() {
-
-  }
-
-
-  handlereset() {
-
-  }
 
   openOptionsPage() {
     chrome.runtime.openOptionsPage();
