@@ -30,6 +30,7 @@ export abstract class Controller extends Disposable {
   model: Model;
   view: IView = new View();
   loadGlobalStatePromise?: Promise<Record<"global_state", IGlobalState> | null | undefined>;
+  createDecoderPageWaitingPromise?: Promise<boolean>;
 
   #keyActionTable: ActionType[] = [];
 
@@ -83,6 +84,7 @@ export abstract class Controller extends Disposable {
       if (!this.model.connected) {
         this.dispatchEvent(new Event(EventEnum.decoderOpened));
         this.model.connected = true;
+        this.createDecoderPageWaitingPromise = undefined;
       }
 
       this.setCurrentEventName(port.name);
@@ -120,7 +122,7 @@ export abstract class Controller extends Disposable {
       if (process.env.DEV) console.log("onFocus", context.contextID);
       if (this.loadGlobalStatePromise) await this.loadGlobalStatePromise;
       this.loadGlobalStatePromise = undefined;
-      await this.createDecoderPage();
+      this.createDecoderPage();
       this.model.focus = true;
       this.model.status = Status.INITED;
       this.model.notifyUpdate("onFocus", [context]);
@@ -281,16 +283,16 @@ export abstract class Controller extends Disposable {
 
   }
 
-  async createDecoderPage() {
+  createDecoderPage() {
     if (this.model.isWebEnv) return;
 
-    if (isExt && isWebWorker && !this.model.globalState.remote && !this.model.connected) {
-      return await chrome.tabs.create({
+    if (isExt && isWebWorker && !this.model.globalState.remote && !this.model.connected && !this.createDecoderPageWaitingPromise) {
+      this.createDecoderPageWaitingPromise = chrome.tabs.create({
         active: true,
         url: "./main.html",
       }).then((tab) => {
         console.log("Opened the decoder page.", tab.groupId);
-        return ; 
+        return true; 
       });
     }
     
