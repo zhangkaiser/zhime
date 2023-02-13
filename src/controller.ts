@@ -1,5 +1,4 @@
 import { IIMEMethodUnion, IMEControllerEventInterface, imeEventList, imeMethodList } from "src/consts/chromeosIME";
-import { IModel } from "src/model/base";
 import { Model, IIMEMethodRenderDetail } from "src/model/model";
 
 import { registerEventDisposable } from "src/api/extension/event";
@@ -28,7 +27,7 @@ type ActionType = [
 
 export abstract class Controller extends Disposable {
 
-  model: IModel;
+  model: Model;
   view: IView = new View();
 
   #keyActionTable: ActionType[] = [];

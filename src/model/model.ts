@@ -6,12 +6,38 @@ import { Port } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
 import { isExt, isWebWorker } from "src/api/common/env";
 
-import { IModel } from "./base";
-import { defaultGlobalState } from "./storage";import { Status } from "./consts";
+import { defaultGlobalState, IGlobalState } from "./storage";
+import { Status } from "./consts";
+import { PartialViewDataModel } from "./datamodel";
 import { EventEnum } from "src/consts/event";
 import { DeocderType, IEnv, mainDecoders, webDecoders } from "src/consts/env";
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
+
+
+export interface IModel extends EventTarget {
+  
+  /** The engine id of IME. */
+  engineID: string;
+  /** The input context id of IME. */
+  contextID: number;
+  /** The focus status of IME. */
+  focus: boolean;
+  /** The main decoder connection status. */ 
+  connected: boolean;
+  /** The input status of IME. */
+  status: Status;
+
+  states?: PartialViewDataModel;
+
+  globalState: IGlobalState;
+
+  notifyUpdate: (eventName: string, value: any[]) => boolean;
+
+  reset(): void;
+
+  clear(): void;
+}
 
 export class Model extends Disposable implements IModel {
 
@@ -26,6 +52,8 @@ export class Model extends Disposable implements IModel {
   status = Status.NO;
   connected = false;
   isWebEnv = false;
+  states?: PartialViewDataModel;
+
   #focus: boolean = false;
   #intervalID = 0;
 
