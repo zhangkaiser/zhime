@@ -4,11 +4,12 @@ import { Disposable } from "src/api/common/disposable";
 import { IPort, WebWorkerPort } from "src/api/common/port";
 import { Port } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
+import { isExt, isWebWorker } from "src/api/common/env";
+
 import { IModel } from "./base";
 import { defaultGlobalState } from "./storage";import { Status } from "./consts";
 import { EventEnum } from "src/consts/event";
-import { IEnv, mainDecoders, webDecoders } from "src/consts/env";
-;
+import { DeocderType, IEnv, mainDecoders, webDecoders } from "src/consts/env";
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
 
@@ -16,6 +17,7 @@ export class Model extends Disposable implements IModel {
 
   constructor(readonly env: IEnv) {
     super();
+    this.isWebEnv = env === "web";
   }
 
   static RECONNECT_TIMEOUT = 3 * 60 * 1000;
@@ -23,6 +25,7 @@ export class Model extends Disposable implements IModel {
   contextID: number = 0;
   status = Status.NO;
   connected = false;
+  isWebEnv = false;
   #focus: boolean = false;
   #intervalID = 0;
 
@@ -64,6 +67,7 @@ export class Model extends Disposable implements IModel {
   }
 
   registerDecoder() {
+    if (process.env.DEV) console.log("Registering decoder.");
 
     // TODO(May be unnecessary.)
     if (
@@ -71,10 +75,11 @@ export class Model extends Disposable implements IModel {
       || !Reflect.has(this.globalState, "decoder") 
       || !this.globalState.decoder
     ) {
+      if (process.env.DEV) console.log("Incorrect global state object.");
       this.eventDispatcher.dispatchMessage = (eventName, value) => {
         if (eventName === "onKeyEvent") {
           console.log("Not found decoder.");
-          this.dispatchEvent(
+          isExt && this.dispatchEvent(
             new CustomEvent("onmessage", 
             {detail: [
               { 
@@ -90,29 +95,22 @@ export class Model extends Disposable implements IModel {
       return;
     }
 
-    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
-
-    if (this.env === "web") {
-      if (Reflect.has(webDecoders, decoderID)) {
-        let scriptPath = webDecoders[decoderID];
-        this.registerWebDecoder(scriptPath.scripts);
-      }
+    if (isWebWorker && !this.globalState.remote) {
       return;
     }
 
-
-    if (!enableRemoteDecoder) {
-      if (typeof window === "object" && Reflect.has(mainDecoders, decoderID)) {
-        let scriptPath = mainDecoders[decoderID];
-        this.registerWebDecoder(scriptPath.scripts);
-      }
-    } else {
-      this.registerRemoteDecoder(decoderID);
+    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
+    if (this.isWebEnv || !enableRemoteDecoder) {
+      this.registerWebDecoder(this.isWebEnv ? webDecoders : mainDecoders, decoderID);
+      return;
     }
+
+    this.registerRemoteDecoder(decoderID);
 
   }
 
   registerRemoteDecoder(decoderID: string) {
+    if (!isExt) return;
     let decoderPort = new Port(decoderID);
 
     this.focusAction = () => {
@@ -128,25 +126,30 @@ export class Model extends Disposable implements IModel {
     }
 
     this.addEventDispatcher(decoderPort);
+    if (process.env.DEV) console.log("registered remote decoder.", decoderID);
   }
 
-  registerWebDecoder(scriptPath: string) {
+  registerWebDecoder(decoders: typeof webDecoders, decoderID: DeocderType) {
+
+    if (!Reflect.has(decoders, decoderID)) return;
+
+    let scriptPath = webDecoders[decoderID].scripts;
     let decoderPort = new WebWorkerPort(scriptPath);
-    
+
     decoderPort.addEventListener("connected", () => {
       globalThis.imeWorker = decoderPort.worker;
       window.dispatchEvent(new Event("registedWorker"));
     });
-
     this.addEventDispatcher(decoderPort);
 
+    if (process.env.DEV) console.log("registered web decoder.", scriptPath);
   }
 
   addEventDispatcher(decoderPort: IPort) {
     decoderPort.onmessage = (msg, port) => {
       // Dispatch decoder event.
       if (Reflect.has(EventEnum, msg.data.type)) {
-        window.dispatchEvent(new Event(msg.data.type));
+        globalThis.dispatchEvent(new Event(msg.data.type));
         return;
       }
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
