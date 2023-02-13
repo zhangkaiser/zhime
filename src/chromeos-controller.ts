@@ -51,13 +51,7 @@ export class ChromeOSController extends Controller {
 
   registerIMElifecycleEvent() {
     const ime = chrome.input.ime;
-    this.disposable = registerEvent(ime.onActivate, async (engineID, screen) => {
-      await this.loadGlobalState();
-      if (!this.model.globalState.remote && !this.model.connected && isWebWorker) {
-        this.createDecoderPage();
-      }
-      this.imeLifecycles.onActivate(engineID, screen);
-    });
+    this.disposable = registerEvent(ime.onActivate, this.imeLifecycles.onActivate);
     this.disposable = registerEvent(ime.onDeactivated, this.imeLifecycles.onDeactivated);
     this.disposable = registerEvent(ime.onFocus, this.imeLifecycles.onFocus);
     this.disposable = registerEvent(ime.onBlur, this.imeLifecycles.onBlur);
@@ -71,6 +65,7 @@ export class ChromeOSController extends Controller {
 
     this.setCurrentEventName("onKeyEvent");
     this.disposable = registerEvent(ime.onKeyEvent, ((engineID: any, keyData: any, requestId: any): any => {
+      if (process.env.DEV) console.log("onKeyEvent->",keyData.type, keyData.key, requestId);
       if (this.imeEvents.onKeyEvent(engineID, keyData, requestId)){
         return true;
       }
@@ -85,16 +80,6 @@ export class ChromeOSController extends Controller {
     ChromeOSController.dispose(this, "onKeyEvent");
     ChromeOSController.dispose(this, "onSurroundingTextChanged");
   }
-
-  createDecoderPage() {
-    chrome.tabs.create({
-      active: true,
-      url: "./main.html",
-    }, () => {
-      console.log("Opened the decoder page.");
-    });
-  }
-
 
   openOptionsPage() {
     chrome.runtime.openOptionsPage();

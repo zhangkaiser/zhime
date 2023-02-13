@@ -1,15 +1,15 @@
 import { IIMEMethodUnion, IMEControllerEventInterface, imeEventList, imeMethodList } from "src/consts/chromeosIME";
 import { Model, IIMEMethodRenderDetail } from "src/model/model";
-
 import { registerEventDisposable } from "src/api/extension/event";
-import { IEnv } from "src/consts/env";
+import { isExt, isWebWorker } from "src/api/common/env";
 import { Disposable } from "src/api/common/disposable";
+
+import { IEnv } from "src/consts/env";
 import { PartialViewDataModel } from "src/model/datamodel";
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
 import { KeyRexExp, Status } from "src/model/consts";
-import { storageInstance } from "./model/storage";
-import { PortInstance } from "./api/extension/port";
+import { IGlobalState, storageInstance } from "./model/storage";
 import { EventEnum } from "./consts/event";
 
 
@@ -29,6 +29,7 @@ export abstract class Controller extends Disposable {
 
   model: Model;
   view: IView = new View();
+  loadGlobalStatePromise?: Promise<Record<"global_state", IGlobalState> | null | undefined>;
 
   #keyActionTable: ActionType[] = [];
 
@@ -45,13 +46,20 @@ export abstract class Controller extends Disposable {
     this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
   }
 
-  protected async loadGlobalState() {
-    let globalState = await storageInstance.get("global_state");
-    if (globalState && globalState['global_state']) {
-      this.model.globalState = globalState['global_state'];
-    } else {
-      this.openOptionsPage();
-    }
+  protected loadGlobalState() {
+
+    this.loadGlobalStatePromise = storageInstance.get("global_state");
+    
+    return this.loadGlobalStatePromise.then((globalState) => {
+      if (globalState && globalState['global_state']) {
+        this.model.globalState = globalState['global_state'];
+        return globalState['global_state'];
+      } else {
+        this.openOptionsPage();
+        return undefined;
+      }
+    });
+
   }
 
   abstract openOptionsPage():void;
@@ -86,7 +94,8 @@ export abstract class Controller extends Disposable {
   }
 
   protected imeLifecycles = {
-    onActivate: (engineID: string, screen: string) => {
+    onActivate: async (engineID: string, screen: string) => {
+      await this.loadGlobalState();
       this.model.engineID = engineID;
       this.#keyActionTable = this.getKeyActionTable();
       this.model.reset();
@@ -107,7 +116,11 @@ export abstract class Controller extends Disposable {
       this.model.status = Status.NO;
     },
   
-    onFocus: (context: chrome.input.ime.InputContext) => {
+    onFocus: async (context: chrome.input.ime.InputContext) => {
+      if (process.env.DEV) console.log("onFocus", context.contextID);
+      if (this.loadGlobalStatePromise) await this.loadGlobalStatePromise;
+      this.loadGlobalStatePromise = undefined;
+      await this.createDecoderPage();
       this.model.focus = true;
       this.model.status = Status.INITED;
       this.model.notifyUpdate("onFocus", [context]);
@@ -116,6 +129,10 @@ export abstract class Controller extends Disposable {
 
   protected imeEvents = {
     onKeyEvent: (engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) => {
+      if (this.loadGlobalStatePromise) {
+        return true;
+      }
+
       if (this.model.status == Status.NO) {
         return true;
       }
@@ -262,6 +279,21 @@ export abstract class Controller extends Disposable {
       }
     }
 
+  }
+
+  async createDecoderPage() {
+    if (this.model.isWebEnv) return;
+
+    if (isExt && isWebWorker && !this.model.globalState.remote && !this.model.connected) {
+      return await chrome.tabs.create({
+        active: true,
+        url: "./main.html",
+      }).then((tab) => {
+        console.log("Opened the decoder page.", tab.groupId);
+        return ; 
+      });
+    }
+    
   }
   
 }

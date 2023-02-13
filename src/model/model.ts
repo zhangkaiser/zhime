@@ -52,6 +52,7 @@ export class Model extends Disposable implements IModel {
   status = Status.NO;
   connected = false;
   isWebEnv = false;
+  registedDecoder?: DeocderType;
   states?: PartialViewDataModel;
 
   #focus: boolean = false;
@@ -85,13 +86,16 @@ export class Model extends Disposable implements IModel {
     this.contextID = 0;
     this.focus = false;
     this.status = Status.NO;
-    this.eventDispatcher.dispose();
   }
 
   reset() {
     this.clear();
-    Model.clear(this.eventDispatcher);
     this.registerDecoder();
+  }
+
+  resetEventDispatcher() {
+    this.eventDispatcher.dispose();
+    Model.clear(this.eventDispatcher);
   }
 
   registerDecoder() {
@@ -123,18 +127,21 @@ export class Model extends Disposable implements IModel {
       return;
     }
 
-    if (isWebWorker && !this.globalState.remote) {
+    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
+
+    if ((isWebWorker && !enableRemoteDecoder) || decoderID === this.registedDecoder) {
       return;
     }
+    
+    this.resetEventDispatcher();
 
-    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
     if (this.isWebEnv || !enableRemoteDecoder) {
       this.registerWebDecoder(this.isWebEnv ? webDecoders : mainDecoders, decoderID);
-      return;
+    } else {
+      this.registerRemoteDecoder(decoderID);
     }
 
-    this.registerRemoteDecoder(decoderID);
-
+    this.registedDecoder = decoderID;
   }
 
   registerRemoteDecoder(decoderID: string) {
