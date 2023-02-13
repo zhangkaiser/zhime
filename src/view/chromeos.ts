@@ -1,5 +1,4 @@
 import { IDataModel } from "src/model/datamodel";
-import { IModel } from "src/model/base";
 import { IView } from "./base";
 
 export class ChromeOSView implements IView, IDataModel {
