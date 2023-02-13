@@ -1,12 +1,14 @@
 
 import { LitElement, html, css, render } from "lit";
 import { customElement, query, queryAll, state } from "lit/decorators.js";
+import { LocalStorage } from "src/api/extension/storage";
 
 import shuangpinIcon from "./icons/chromeos-shuangpin-ime";
 import rimeIcon from "./icons/rime";
 
 import type { OptionsPage as LibrimeOptionsPage } from "../librime/emscripten/src/options-page";
-import { webDecoders } from "./consts/env";
+import { DeocderType, webDecoders } from "./consts/env";
+import { defaultGlobalState, IGlobalState, setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
 
 interface DecoderInfo {
   name: string,
@@ -72,9 +74,6 @@ const modes = [
 @customElement("zhime-options")
 class OptionsPage extends LitElement {
 
-  constructor() {
-    super();
-  }
   static styles = css`
     :host {
       font-size: 125%;
@@ -163,6 +162,33 @@ class OptionsPage extends LitElement {
     
   `;
 
+  @state() globalState: IGlobalState = defaultGlobalState;
+
+  constructor() {
+    super();
+    setGlobalLocalStorageInstance(LocalStorage<any>);
+    storageInstance.get("global_state").then((res) => {
+      if (res && res['global_state']) {
+        this.changeGlobalState(res['global_state']);
+      }
+    });
+  }
+
+  changeGlobalState(newState: Partial<IGlobalState>) {
+    this.globalState = {
+      ...defaultGlobalState,
+      ...newState
+    }
+    // TODO(Simple implementation.)
+    if (this.globalState.remote) {
+      this.currentMode = 1
+    } else {
+      this.currentMode = 0
+    }
+
+    storageInstance.set("global_state", this.globalState);
+  }
+
   get mainElement() {
     return this.shadowRoot!.getElementById("maindecoder") as HTMLInputElement;
   }
@@ -171,14 +197,14 @@ class OptionsPage extends LitElement {
 
   success() {
     let { value } = this.mainElement;
-    chrome.storage.local.set({
-      global_state: {
-        decoder: value
-      }
-    }, () => {
-      alert("保存成功，点击确定后将重启此扩展");
-      chrome.runtime.reload();
+    this.changeGlobalState({
+      decoder: value as DeocderType
     });
+
+    setTimeout(() => {
+      alert("本地扩展ID设置成功，将重新重启！");
+      chrome.runtime.reload();
+    }, 1000);
   }
 
   onClickDownloadBtn(ev: Event) {
@@ -190,10 +216,15 @@ class OptionsPage extends LitElement {
     let target = e.currentTarget as HTMLDivElement;
     let index = + (target.dataset.index ?? 0);
     if (this.currentMode === index) return;
-    this.currentMode = index;
-  }
 
-  @query(".mode-container") modeContainer!: HTMLDivElement;
+    let state:any = { remote: !!index }
+    if (index === 0) {
+      state.decoder = "librime";
+    } else {
+      state.decoder = "";
+    }
+    this.changeGlobalState(state);
+  }
 
   builtinDecoderOptionsUI() {
     import("../librime/emscripten/src/options-page").then(async () => {
@@ -245,7 +276,6 @@ class OptionsPage extends LitElement {
   }
 
   getModeContainerUI() {
-
     return html`
       ${this.currentMode === 0 ? this.builtinDecoderOptionsUI() : this.extDecoderOptionsUI()}
     `;

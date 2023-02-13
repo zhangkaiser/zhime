@@ -10,8 +10,8 @@ export interface IGlobalState {
 }
 
 export const defaultGlobalState: IGlobalState = {
-  decoder: "shuangpin",
-  remote: true
+  decoder: "librime",
+  remote: false
 }
 
 export interface IDecoderItemModel {
