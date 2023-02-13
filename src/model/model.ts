@@ -77,7 +77,6 @@ export class Model extends Disposable implements IModel {
   engineID: string = "zhime";
 
   notifyUpdate(eventName: string, value: any[]) {
-    if (process.env.DEV) console.log("notifyUpdate", eventName, value);
     let results = this.eventDispatcher.dispatchMessage(eventName, value);
     return !!(results.filter((result) => result).length);
   }

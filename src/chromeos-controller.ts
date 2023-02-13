@@ -65,7 +65,6 @@ export class ChromeOSController extends Controller {
 
     this.setCurrentEventName("onKeyEvent");
     this.disposable = registerEvent(ime.onKeyEvent, ((engineID: any, keyData: any, requestId: any): any => {
-      if (process.env.DEV) console.log("onKeyEvent->",keyData.type, keyData.key, requestId);
       if (this.imeEvents.onKeyEvent(engineID, keyData, requestId)){
         return true;
       }

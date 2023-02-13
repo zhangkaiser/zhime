@@ -97,6 +97,7 @@ export abstract class Controller extends Disposable {
 
   protected imeLifecycles = {
     onActivate: async (engineID: string, screen: string) => {
+      if (process.env.DEV) console.log("onActivate", engineID, screen);
       await this.loadGlobalState();
       this.model.engineID = engineID;
       this.#keyActionTable = this.getKeyActionTable();
@@ -105,14 +106,17 @@ export abstract class Controller extends Disposable {
     },
   
     onDeactivated: (engineID: string) => {
+      if (process.env.DEV) console.log("onDeactivated", engineID);
       this.model.notifyUpdate("onDeactivated", [engineID]);
     },
   
     onReset: (engineID: string) => {
+      if (process.env.DEV) console.log("onReset", engineID);
       this.model.notifyUpdate("onReset", [engineID]);
     },
   
     onBlur: (contextID: number) => {
+      if (process.env.DEV) console.log("onBlur", contextID);
       this.model.focus = false;
       this.model.notifyUpdate("noBlur", [contextID]);
       this.model.status = Status.NO;
@@ -131,6 +135,8 @@ export abstract class Controller extends Disposable {
 
   protected imeEvents = {
     onKeyEvent: (engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) => {
+      if (process.env.DEV) console.log("onKeyEvent", keyData.type, keyData.key, requestId);
+
       if (this.loadGlobalStatePromise) {
         return true;
       }
@@ -156,6 +162,7 @@ export abstract class Controller extends Disposable {
       return false;
     },
     onCandidateClicked: (engineID: string, candidateID: number, button: "left" | "middle" | "right") => {
+      if (process.env.DEV) console.log("onCandidateClicked", engineID, candidateID, button);
       this.model.notifyUpdate("onCandidateClicked", [engineID, candidateID, button]);
     },
     onSurroundingTextChanged: (engineID: string, surroundingInfo: chrome.input.ime.SurroundingTextInfo) => {
@@ -266,19 +273,15 @@ export abstract class Controller extends Disposable {
 
     this.updateStatus(type, value);
 
-    if (process.env.DEV) console.log("handleModelMessage", type, value);
-
     if (imeMethodList.indexOf(type) !== -1) {
+      if (process.env.DEV) console.log("Trigger ime method", type, value);
       this.setData({[type]: value[0]}, render);
     } else if(imeEventList.indexOf(type) !== -1) {
       // pass.
+    } else if (['print', 'printErr'].indexOf(type) !== -1 && (this as any)[type]) {
+      (this as any)[type](...value);
     } else {
-      if (['print', 'printErr'].indexOf(type) !== -1 && (this as any)[type]) {
-        (this as any)[type](...value);
-      } else {
-        console.error("Not support handler", type, value);
-
-      }
+      console.warn("Not supported message handler", type, value);
     }
 
   }
