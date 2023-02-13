@@ -49,9 +49,9 @@ export function convertToPortInstance<T extends FunctionConstructor>(
 
 export class WebWorkerPort extends Disposable implements IPort {
 
-  constructor(name: string) {
+  constructor(readonly name: string) {
     super();
-    this.name = name;
+    this.scriptSrc = name;
   }
 
 
@@ -60,12 +60,7 @@ export class WebWorkerPort extends Disposable implements IPort {
 
   scriptSrc= "";
 
-
   #worker?: Worker;
-  
-  set name(value: string) {
-    this.scriptSrc = value;
-  }
 
   connect() {
     try {
@@ -105,14 +100,19 @@ export class WebWorkerPort extends Disposable implements IPort {
     try {
       this.#worker!.postMessage(msg);
     } catch(e) {
-      console.error(e);
+      console.error("Web worker post message error.", this.name);
       return false;
     }
     return true;
   }
 
   disconnect() {
+    console.info("Destory the current worker.", this.name);
     this.#worker?.terminate();
+  }
+
+  dispose() {
+    this.disconnect();
   }
 
 }
