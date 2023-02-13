@@ -62,7 +62,7 @@ export abstract class Controller extends Disposable {
     
   }
 
-  protected extLifecycles = {
+  protected lifecycles = {
     onInstalled: (details: chrome.runtime.InstalledDetails) => {
     
     },

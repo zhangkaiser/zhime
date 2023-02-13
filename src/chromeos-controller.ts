@@ -45,8 +45,8 @@ export class ChromeOSController extends Controller {
   }
 
   registerLifecycleEvent() {
-    this.disposable = registerEvent(chrome.runtime.onInstalled, this.extLifecycles.onInstalled);
-    this.disposable = registerEvent(chrome.runtime.onUpdateAvailable, this.extLifecycles.onUpdateAvaiable);
+    this.disposable = registerEvent(chrome.runtime.onInstalled, this.lifecycles.onInstalled);
+    this.disposable = registerEvent(chrome.runtime.onUpdateAvailable, this.lifecycles.onUpdateAvaiable);
   }
 
   registerIMElifecycleEvent() {
