@@ -30,13 +30,12 @@ interface IGetFilesOptions {
   recursive?: boolean
 }
 
+/** @todo Need show error info. */
 export function getExtensionPackageFiles(path: string | string[], options: IGetFilesOptions = { recursive: true }): Promise<FileEntry[]> {
 
   return new Promise((resolve, reject) => {
     chrome.runtime.getPackageDirectoryEntry(async (rootEntry) => {
-
       let filePromiseLists: Promise<FileEntry>[] = [];
-    
       if (Array.isArray(path)) {
         path.forEach((filePath) => {
           filePromiseLists.push(
@@ -51,7 +50,6 @@ export function getExtensionPackageFiles(path: string | string[], options: IGetF
           );
        });
       } else {
-
         await (new Promise(
           (resolve1, reject1) => {
 

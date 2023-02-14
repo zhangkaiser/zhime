@@ -7,7 +7,8 @@ import shuangpinIcon from "./icons/chromeos-shuangpin-ime";
 import rimeIcon from "./icons/rime";
 
 import type { OptionsPage as LibrimeOptionsPage } from "../librime/emscripten/src/options-page";
-import { DeocderType, webDecoders } from "./consts/env";
+
+import { DeocderType, mainDecoders } from "./consts/env";
 import { defaultGlobalState, IGlobalState, setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
 
 interface DecoderInfo {
@@ -155,6 +156,11 @@ class OptionsPage extends LitElement {
       margin: -2px;
       z-index: 1023;
     }
+
+    ::scrollbar {
+      width: 9px;
+      background-color: rgba(240, 240, 240, 1);
+    }
     
     .info-bg {
       width: 85vw;
@@ -226,10 +232,24 @@ class OptionsPage extends LitElement {
     this.changeGlobalState(state);
   }
 
+  #workers: Record<string, Worker> = {
+
+  }
+
   builtinDecoderOptionsUI() {
-    import("../librime/emscripten/src/options-page").then(async () => {
+    
+    import("../librime/emscripten/src/options-page").then((res) => {
       let librimeOptionsPage = document.createElement("options-page") as LibrimeOptionsPage;
-      let worker = new Worker(webDecoders.librime.scripts);
+      let scriptPath = mainDecoders.librime.scripts;
+      let worker;
+      if (scriptPath in this.#workers) {
+        worker = this.#workers[scriptPath];
+      } else {
+        worker = new Worker(scriptPath);
+        res.changeAssetsPath("web");
+        this.#workers[scriptPath] = worker;
+
+      }
       librimeOptionsPage.setWorker(worker);
       let container = this.shadowRoot!.getElementById("options-container") as HTMLDivElement;
       container.appendChild(librimeOptionsPage);
