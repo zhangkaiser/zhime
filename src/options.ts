@@ -236,23 +236,22 @@ class OptionsPage extends LitElement {
 
   }
 
+  #optionsPage!: LibrimeOptionsPage;
+
   builtinDecoderOptionsUI() {
     
     import("../librime/emscripten/src/options-page").then((res) => {
-      let librimeOptionsPage = document.createElement("options-page") as LibrimeOptionsPage;
       let scriptPath = mainDecoders.librime.scripts;
-      let worker;
-      if (scriptPath in this.#workers) {
-        worker = this.#workers[scriptPath];
-      } else {
-        worker = new Worker(scriptPath);
+      if (!(scriptPath in this.#workers)) {
+        this.#optionsPage = document.createElement("options-page") as LibrimeOptionsPage;
+        let worker = new Worker(scriptPath);
         res.changeAssetsPath("web");
         this.#workers[scriptPath] = worker;
-
+        this.#optionsPage.setWorker(worker);
       }
-      librimeOptionsPage.setWorker(worker);
       let container = this.shadowRoot!.getElementById("options-container") as HTMLDivElement;
-      container.appendChild(librimeOptionsPage);
+      container.innerHTML = "";
+      container.appendChild(this.#optionsPage);
     });
     return html`<div id="options-container"></div>`;
   }
@@ -285,7 +284,7 @@ class OptionsPage extends LitElement {
             <div class="download-btn" ?hidden=${!Reflect.has(decoderInfo, "download")}>
               <a .href=${decoderInfo.download}>直接下载</a>
             </div>
-            <div class="download-btn" ?hidden=${!Reflect.has(decoderInfo, "“store")}
+            <div class="download-btn" ?hidden=${!Reflect.has(decoderInfo, "store")}
               <a .href=${decoderInfo.store}>Google Web Store安装</a>
             </div>
 
