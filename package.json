@@ -8,7 +8,7 @@
     "clone:submodule": "git submodule update --init",
     "shuangpin": "cd shuangpin && npm install && cd googlepinyin && npm install && cd .. && npm run build",
     "librime": "cd librime && npm run librime && npm install && npm run build",
-    "build": "export PRODUCTION=true && webpack",
+    "build": "rimraf dist && export PRODUCTION=true && webpack",
     "build:deps": "rimraf dist && npm run clone:submodule && npm run shuangpin && npm run librime",
     "update:shuangpin": "cd shuangpin && git checkout wasm-decoder && git pull && cd .. && git add shuangpin && git commit -m \"Update shuangpin submodule to latest.\"",
     "update:librime": "cd librime && git checkout master && git pull && cd .. && git add librime && git commit -m \"Update librime submodule to latest.\"",

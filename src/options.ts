@@ -244,9 +244,9 @@ class OptionsPage extends LitElement {
     import("../librime/emscripten/src/options-page").then((res) => {
       let scriptPath = mainDecoders.librime.scripts;
       if (!(scriptPath in this.#workers)) {
+        res.changeAssetsPath("web");
         this.#optionsPage = document.createElement("options-page") as LibrimeOptionsPage;
         let worker = new Worker(scriptPath);
-        res.changeAssetsPath("web");
         this.#workers[scriptPath] = worker;
         this.#optionsPage.setWorker(worker);
       }
