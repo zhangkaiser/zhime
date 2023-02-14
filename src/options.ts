@@ -174,9 +174,10 @@ class OptionsPage extends LitElement {
     super();
     setGlobalLocalStorageInstance(LocalStorage<any>);
     storageInstance.get("global_state").then((res) => {
-      if (res && res['global_state']) {
-        this.changeGlobalState(res['global_state']);
+      if (!res || !res['global_state']) {
+        res = { global_state: defaultGlobalState }
       }
+      this.changeGlobalState(res['global_state']);
     });
   }
 
