@@ -54,7 +54,7 @@ module.exports = {
         {from: "./assets/html/main.html", to: "./main.html"},
         {from: "./assets/html/index.html", to: "./web/index.html"},
         {from: "./librime/out/worker", to: "./web/decoders"},
-        {from: "./librime/out/data", to: "./web/data"},
+        {from: "./librime/emscripten/asset/data", to: "./web/data"},
         {from: "./assets/manifest/_headers", to: "./web"}
       ]
     }),
