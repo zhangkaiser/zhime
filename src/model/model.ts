@@ -167,7 +167,7 @@ export class Model extends Disposable implements IModel {
 
     if (!Reflect.has(decoders, decoderID)) return;
 
-    let scriptPath = webDecoders[decoderID].scripts;
+    let scriptPath = decoders[decoderID].scripts;
     let decoderPort = new WebWorkerPort(scriptPath);
 
     decoderPort.addEventListener("connected", () => {
