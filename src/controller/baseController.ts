@@ -15,17 +15,36 @@ import { IEnv } from "src/consts/env";
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
 
-// type ActionType = [
-//   "keydown" | "keyup",
-//   [boolean, boolean, boolean], // Modifiers [Control, Shift, Alt].
-//   string | RegExp, // KeyCode / KeyChar / RegExp.
-//   Status | null, // status.
-//   boolean, // return.
-//   Function | null, // Condition function.
-//   Function, // Action function.
-//   Object, // Action function scope
-//   any[] // action function args.
-// ];
+const enum KeyEventType {
+  up,
+  down
+}
+
+const SpecialKey = {
+  UP: 'Up',
+  DOWN: 'Down',
+  PAGE_UP: 'Page_up',
+  PAGE_DOWN: 'Page_down',
+  SPACE: ' ',
+  ENTER: 'Enter',
+  BACKSPACE: 'Backspace',
+  ESC: 'Esc',
+  LEFT: 'Left',
+  RIGHT: 'Right',
+  SHIFT: "Shift",
+  CTRL: "Control",
+  ALT: "Alt",
+  INVALID: '\ufffd'
+}
+  
+
+interface INameOption {
+  key: string,
+  type: KeyEventType | string,
+  ctrlKey?: boolean,
+  shiftKey?: boolean,
+  altKey?: boolean
+}
 
 export abstract class Controller extends Disposable {
 
@@ -34,7 +53,7 @@ export abstract class Controller extends Disposable {
   loadGlobalStatePromise?: Promise<Record<"global_state", IGlobalState> | null | undefined>;
   createDecoderPageWaitingPromise?: Promise<boolean>;
 
-  protected _keyActionAllMap = new Map<Status, Map<string, Function>>;
+  protected _keyActionAllMap = new Map<Status | "all", Map<string, Function>>;
 
   constructor(readonly env: IEnv) {
     super();
@@ -178,20 +197,17 @@ export abstract class Controller extends Disposable {
 
   handleKeyAction(keyData: chrome.input.ime.KeyboardEvent) {
 
+
     let status = this.model.status;
-    let keyActionMap = this._keyActionAllMap.get(status);
-    if (keyActionMap) {
-      let keyActionName = [
-        keyData.key,
-        keyData.type == "keydown" ? 1 : 0, 
-        keyData.ctrlKey ? 1 : 0,
-        keyData.altKey ? 1 : 0,
-        keyData.shiftKey ? 1 : 0
-      ].join("::");
-      
-      if (keyActionMap.has(keyActionName) && keyActionMap.get(keyActionName)!()) {
+    let currentStatusMap = this._keyActionAllMap.get(status);
+    let allStatusMap = this._keyActionAllMap.get("all");
+    let actionName = this.getKeyActionName(keyData);
+    if (allStatusMap && allStatusMap.has(actionName) && allStatusMap.get(actionName)!()) {      
         return true;
-      }
+    }
+
+    if (currentStatusMap && currentStatusMap.has(actionName) && currentStatusMap.get(actionName)!()) {
+      return true;
     }
 
     return false;
@@ -201,6 +217,9 @@ export abstract class Controller extends Disposable {
     return false;
   }
 
+  /**
+   * 允许所有`keydown`类型的按键, 并过滤掉非Modifier的keyup按键事件.
+   */ 
   isAllowNotifyKeyEvent(keyData: chrome.input.ime.KeyboardEvent) {
     if (keyData.type === "keydown") return true;
 
@@ -208,30 +227,60 @@ export abstract class Controller extends Disposable {
 
     return true;
   }
- 
-  // getKeyActionTable(): ActionType[] {
 
-  //   let isPureModifiers = () => {
+  addKeyAction(status: Status | "all", nameOption: INameOption, callback: (...args: any) => boolean) {
+    let name = this.getKeyActionName(nameOption);
+    let sameStatusMap = this._keyActionAllMap.get(status);
+    if (!sameStatusMap) sameStatusMap = new Map();
+    sameStatusMap.set(name, callback);
+  }
 
-  //   }
-
-  //   let list: ActionType[] = [];
-    // // Esc key.
-    // list.push(["keyup", [false, false, false], "Esc", null, false, null, this.hideIME, this, []]);
-    // // Alt + Space.
-    // list.push(["keydown", [false, false, true], " ", Status.INITED, true, null, this.handleIMESwitchKey1, this, []]);
-    // // Control + Shift.
-    // list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, () => {}, this, []]);
-    // list.push(["keyup", [true, false, false], "Shift", Status.INITED, false, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
-    // // Move Up.
-    // list.push(["keydown", [false, false, false], "Up", Status.SHOWING, true, null, this.processChoose, this, []]);
-    // list.push(["keydown", [false, false, false], "Down", Status.SHOWING, true])
-
-  //   return list;
-  // }
+  getKeyActionName(nameOption: INameOption) {
+    if (typeof nameOption.type == "string") {
+      nameOption.type = nameOption.type == "keydown" ? KeyEventType.down : KeyEventType.up;
+    }
+    return [
+      nameOption.key,
+      nameOption.type,
+      nameOption.ctrlKey ? 1 : 0,
+      nameOption.altKey ? 1 : 0,
+      nameOption.shiftKey ? 1 : 0
+    ].join("_");
+  }
 
   initIMEKeyAction() {
     this._keyActionAllMap = new Map;
+    // Add default actions.
+    this.registerDefaultActions();
+  }
+
+  private registerDefaultActions() {
+
+    const emptyBlock = () => true;
+
+    const hideIME = () => (this.hideIME(), false);
+    this.addKeyAction("all", {key: "Esc", type: KeyEventType.up}, hideIME);
+
+    // Alt + space - 切换内置/已配置的输入法方法.
+    const IMESwitchKey1 = () => (this.handleIMESwitchKey1(), true);
+    this.addKeyAction(Status.FOCUS, {key: SpecialKey.SPACE, type: KeyEventType.down, altKey: true}, IMESwitchKey1);
+
+    // Control + Shift - 切换内置/已配置的输入法方法
+    const IMESwitchKey2 = () => (this.handleIMESwitchKey2, true);
+    this.addKeyAction(Status.FOCUS, {key: SpecialKey.SHIFT, type: KeyEventType.down, ctrlKey: true}, emptyBlock);
+    this.addKeyAction(Status.FOCUS, {key: SpecialKey.SHIFT, type: KeyEventType.up, ctrlKey: true}, IMESwitchKey2);
+
+    // Move highlight.
+    const prevHighlight = () => (this.moveHighlight(-1), false);
+    const nextHighlight = () => (this.moveHighlight(1), false);
+    this.addKeyAction(Status.COMPOSING, {key: SpecialKey.UP, type: KeyEventType.down}, prevHighlight);
+    this.addKeyAction(Status.COMPOSING, {key: SpecialKey.DOWN, type: KeyEventType.down}, nextHighlight);
+
+    // Move cursor
+    const moveCursorLeft = () => (this.moveCursor(-1), false);
+    const moveCursorRight = () => (this.moveCursor(1), false);
+    this.addKeyAction(Status.COMPOSING, {key: SpecialKey.LEFT, type: KeyEventType.down}, moveCursorLeft);
+    this.addKeyAction(Status.COMPOSING, {key: SpecialKey.RIGHT, type: KeyEventType.down}, moveCursorRight);
 
   }
 
@@ -266,6 +315,26 @@ export abstract class Controller extends Disposable {
 
   /** Control + Shift */
   handleIMESwitchKey2() {
+
+  }
+
+  moveHighlight(value: 1 | -1) {
+    this.model.highlight = value;
+    this.setData({
+      setCursorPosition: {
+        contextID: this.model.contextID,
+        candidateID: this.model.currentCandidateID
+      }
+    });
+  }
+
+  /** @todo 
+   * 暂无法支持焦点移动,需要等待`zhime`重构到需要控制候选词的版本才能实现,当前是在decoder中实现
+   */
+  moveCursor(value: number) {
+    
+  }
+  setCursor(value: number) {
 
   }
 

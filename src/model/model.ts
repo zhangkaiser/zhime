@@ -57,6 +57,7 @@ export class Model extends Disposable implements IModel {
 
   #intervalID = 0;
 
+  currentCandidateID = 0;
   focusAction?: Function;
   blurAction?: Function;
 
@@ -67,6 +68,13 @@ export class Model extends Disposable implements IModel {
   }
   get focus() {
     return !!this.status;
+  }
+
+  /** @todo 需要验证 */
+  set highlight(value: -1 | 1) {
+    this.currentCandidateID += value;
+    if (this.currentCandidateID <= 0) this.currentCandidateID = 0;
+    // this.
   }
 
   globalState = defaultGlobalState;
@@ -96,7 +104,7 @@ export class Model extends Disposable implements IModel {
   }
 
   registerDecoder() {
-    if (process.env.DEV) console.log("Registering decoder.");
+    if (process.env.DEV) console.log("Register decoder.");
 
     // TODO(May be unnecessary.)
     if (
