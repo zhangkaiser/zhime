@@ -1,7 +1,6 @@
 // 向外部提供的View API，解决不同的交互差异。
 
-import { IIMEMethodUnion, IMEMethodInterface, imeMethodList } from "src/consts/chromeosIME";
-import { IView } from "src/view/base";
+import { IMEMethodInterface, imeMethodList } from "src/consts/chromeosIME";
 
 class ZhimeAPIProxy {
   [name: string]: any;

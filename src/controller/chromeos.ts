@@ -1,11 +1,11 @@
 
-import { Controller } from "src/controller";
 import { registerEventDisposable as registerEvent } from "src/api/extension/event";
 import { IMessageObjectType } from "src/api/common/message";
-import { isWebWorker } from "src/api/common/env";
 
-import { ChromeOSView } from "./view/chromeos";
-import { EventEnum } from "./consts/event";
+import { ChromeOSView } from "src/view/chromeos";
+import { EventEnum } from "src/consts/event";
+
+import { Controller } from "./baseController";
 
 export class ChromeOSController extends Controller {
 

@@ -1,15 +1,17 @@
 
 import { LitElement, html, css, render } from "lit";
-import { customElement, query, queryAll, state } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
+
 import { LocalStorage } from "src/api/extension/storage";
 
-import shuangpinIcon from "./icons/chromeos-shuangpin-ime";
-import rimeIcon from "./icons/rime";
+import shuangpinIcon from "src/icons/chromeos-shuangpin-ime";
+import rimeIcon from "src/icons/rime";
 
-import type { OptionsPage as LibrimeOptionsPage } from "../librime/emscripten/src/options-page";
+import { DeocderType, mainDecoders } from "src/consts/env";
+import { defaultGlobalState, IGlobalState, setGlobalLocalStorageInstance, storageInstance } from "src/model/storage";
 
-import { DeocderType, mainDecoders } from "./consts/env";
-import { defaultGlobalState, IGlobalState, setGlobalLocalStorageInstance, storageInstance } from "./model/storage";
+// @ts-ignore
+import type { OptionsPage as LibrimeOptionsPage } from "../../librime/emscripten/src/options-page";
 
 interface DecoderInfo {
   name: string,
@@ -240,8 +242,8 @@ class OptionsPage extends LitElement {
   #optionsPage!: LibrimeOptionsPage;
 
   builtinDecoderOptionsUI() {
-    
-    import("../librime/emscripten/src/options-page").then((res) => {
+    // @ts-ignore
+    import("../../librime/emscripten/src/options-page").then((res) => {
       let scriptPath = mainDecoders.librime.scripts;
       if (!(scriptPath in this.#workers)) {
         res.changeAssetsPath("web");
@@ -324,7 +326,7 @@ class OptionsPage extends LitElement {
         </div>
         ${optionsInfo.map((item, index) => html`
           <div class="info-box">
-            <div class="desc">
+          decoder  <div class="desc">
               <span><b>${index + 1}. </b> ${item.description}</span>
             </div>
           </div>

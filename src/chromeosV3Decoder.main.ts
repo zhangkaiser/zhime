@@ -1,9 +1,10 @@
 import { LocalStorage } from "src/api/extension/storage";
 import { registerEventDisposable } from "src/api/extension/event";
 import { addBeforeUnloadInfo, removeBeforeUnloadInfo } from "src/api/common/window";
+import { changeGlobalConsole } from "src/api/common/console";
+
 import { setGlobalLocalStorageInstance } from "./model/storage";
-import { ChromeOSController } from "./chromeos-controller";
-import { changeGlobalConsole } from "./api/common/console";
+import { ChromeOSController } from "./controller/chromeos";
 
 
 let intervalID = 0;

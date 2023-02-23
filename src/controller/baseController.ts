@@ -1,17 +1,19 @@
-import { IIMEMethodUnion, IMEControllerEventInterface, imeEventList, imeMethodList } from "src/consts/chromeosIME";
-import { Model, IIMEMethodRenderDetail } from "src/model/model";
+
 import { registerEventDisposable } from "src/api/extension/event";
 import { isExt, isWebWorker } from "src/api/common/env";
 import { Disposable } from "src/api/common/disposable";
 
-import { IEnv } from "src/consts/env";
+import { Model, IIMEMethodRenderDetail } from "src/model/model";
 import { PartialViewDataModel } from "src/model/datamodel";
+import { KeyRexExp, Status } from "src/model/consts";
+import { IGlobalState, storageInstance } from "src/model/storage";
+
+import { EventEnum } from "src/consts/event";
+import { IIMEMethodUnion, imeEventList, imeMethodList } from "src/consts/chromeosIME";
+import { IEnv } from "src/consts/env";
+
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
-import { KeyRexExp, Status } from "src/model/consts";
-import { IGlobalState, storageInstance } from "./model/storage";
-import { EventEnum } from "./consts/event";
-
 
 type ActionType = [
   "keydown" | "keyup",

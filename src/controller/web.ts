@@ -4,27 +4,29 @@
  * - 构建IME API
  * - 处理交互
  */
-import { Controller } from "./controller";
-import { storageInstance } from "./model/storage";
-import { IView } from "./view/base";
+
 import { html, render } from "lit";
+
+import { registerEmitterEventDisposable, registerEventTargetDisposable, registerGlobalEventDisposable } from "src/api/common/event";
+
+import { Controller } from "./baseController";
+
+import { Status } from "src/model/consts";
+import { storageInstance } from "src/model/storage";
+
+import type { TuiEditor } from "src/components/tui-editor";
+import type { EditHeader } from "src/components/edit-header";
+import type { WebIMEView } from "src/view/webime";
+import type { IMEWidght } from "src/components/ime-widght";
+// @ts-ignore
+import type { OptionsPage } from "../../librime/emscripten/src/options-page";
 
 import tuiEditorStyles from "@toast-ui/editor/dist/toastui-editor.css";
 
-import "./components/tui-editor";
-import "./view/webime";
-import "./components/edit-header";
-import "../librime/emscripten/src/options-page";
-
-import type { TuiEditor } from "./components/tui-editor";
-import type { EditHeader } from "./components/edit-header";
-import type { WebIMEView } from "./view/webime";
-import type { OptionsPage } from "../librime/emscripten/src/options-page";
-import type { IMEWidght } from "./components/ime-widght";
-
-import { Status } from "./model/consts";
-import { registerEmitterEventDisposable, registerEventTargetDisposable, registerGlobalEventDisposable } from "./api/common/event";
-
+import "src/components/tui-editor";
+import "src/view/webime";
+import "src/components/edit-header";
+import "../../librime/emscripten/src/options-page";
 
 export class WebController extends Controller {
 
@@ -87,8 +89,8 @@ export class WebController extends Controller {
       this.editor.editor.addWidget(this.imeWidght, "bottom", pos[0]);
     });
   
-    this.disposable = registerEventTargetDisposable(this.imeView, "commit", (e) => {
-      this.editor.editor.insertText((e as CustomEvent).detail.text);
+    this.disposable = registerEventTargetDisposable(this.imeView, "commit", (e: any) => {
+      this.editor.editor.insertText(e.detail.text);
     });
   }
 

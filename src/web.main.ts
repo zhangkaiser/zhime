@@ -1,7 +1,8 @@
 import { setGlobalLocalStorageInstance } from "./model/storage";
 import { LocalStorage } from "src/api/common/storage";
-import { WebController } from "./web-controller";
-import { changeGlobalConsole } from "./api/common/console";
+import { changeGlobalConsole } from "src/api/common/console";
+
+import { WebController } from "./controller/web";
 
 async function main() {
   changeGlobalConsole("web-main");

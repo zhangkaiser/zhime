@@ -16,10 +16,11 @@ function getDefinePluginConfig() {
 
 module.exports = {
   entry: {
-    background: './src/chromeos-bg.ts',
-   "web/index": "./src/web-main.ts",
-    options: "./src/options.ts",
-    main: "./src/decoder-page.ts"
+    background: './src/chromeosV3.main.ts',
+    main: "./src/chromeosV3Decoder.ts",
+    options: "./src/pages/chromeosOptions.ts",
+    "background-v2": "./src/pages/chromeosV2.main.ts",
+   "web/index": "./src/web.main.ts",
   },
   mode,
   output: {

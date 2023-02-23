@@ -1,6 +1,6 @@
 import { LocalStorage } from "src/api/extension/storage";
-import { changeGlobalConsole } from "./api/common/console";
-import { ChromeOSController } from "./chromeos-controller";
+import { changeGlobalConsole } from "src/api/common/console";
+import { ChromeOSController } from "./controller/chromeos";
 import { setGlobalLocalStorageInstance } from "./model/storage";
 
 async function main() {
