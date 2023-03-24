@@ -52,7 +52,6 @@ module.exports = {
       patterns: [
         {from: "./assets/manifest/chromeos-ui.json", to: "./manifest.json"},
         {from: "./assets/html/options.html", to: "./options.html"},
-        {from: "./assets/html/main.html", to: "./main.html"},
         {from: "./assets/html/index.html", to: "./web/index.html"},
         {from: "./librime/out/worker", to: "./web/decoders"},
         {from: "./librime/emscripten/asset/data", to: "./web/data"},

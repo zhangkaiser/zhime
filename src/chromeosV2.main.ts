@@ -1,6 +1,5 @@
 
-import { Controller } from "src/controller";
-
+import { Controller } from "./controller/baseController";
 
 class Background {
 
