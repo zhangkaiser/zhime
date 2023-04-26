@@ -15,17 +15,17 @@ import { IEnv } from "src/consts/env";
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
 
-type ActionType = [
-  "keydown" | "keyup",
-  [boolean, boolean, boolean], // Modifiers [Control, Shift, Alt].
-  string | RegExp, // KeyCode / KeyChar / RegExp.
-  Status | null, // status.
-  boolean, // return.
-  Function | null, // Condition function.
-  Function, // Action function.
-  Object, // Action function scope
-  any[] // action function args.
-];
+// type ActionType = [
+//   "keydown" | "keyup",
+//   [boolean, boolean, boolean], // Modifiers [Control, Shift, Alt].
+//   string | RegExp, // KeyCode / KeyChar / RegExp.
+//   Status | null, // status.
+//   boolean, // return.
+//   Function | null, // Condition function.
+//   Function, // Action function.
+//   Object, // Action function scope
+//   any[] // action function args.
+// ];
 
 export abstract class Controller extends Disposable {
 
@@ -34,7 +34,7 @@ export abstract class Controller extends Disposable {
   loadGlobalStatePromise?: Promise<Record<"global_state", IGlobalState> | null | undefined>;
   createDecoderPageWaitingPromise?: Promise<boolean>;
 
-  #keyActionTable: ActionType[] = [];
+  protected _keyActionAllMap = new Map<Status, Map<string, Function>>;
 
   constructor(readonly env: IEnv) {
     super();
@@ -102,7 +102,7 @@ export abstract class Controller extends Disposable {
       if (process.env.DEV) console.log("onActivate", engineID, screen);
       await this.loadGlobalState();
       this.model.engineID = engineID;
-      this.#keyActionTable = this.getKeyActionTable();
+      this.initIMEKeyAction();
       this.model.reset();
       this.model.notifyUpdate("onActivate", [engineID, screen]);
     },
@@ -121,7 +121,6 @@ export abstract class Controller extends Disposable {
       if (process.env.DEV) console.log("onBlur", contextID);
       this.model.focus = false;
       this.model.notifyUpdate("noBlur", [contextID]);
-      this.model.status = Status.NO;
     },
   
     onFocus: async (context: chrome.input.ime.InputContext) => {
@@ -130,7 +129,6 @@ export abstract class Controller extends Disposable {
       this.loadGlobalStatePromise = undefined;
       this.createDecoderPage();
       this.model.focus = true;
-      this.model.status = Status.INITED;
       this.model.notifyUpdate("onFocus", [context]);
     }
   }
@@ -143,7 +141,7 @@ export abstract class Controller extends Disposable {
         return true;
       }
 
-      if (this.model.status == Status.NO) {
+      if (!this.model.status) { // No focus.
         return true;
       }
 
@@ -151,7 +149,7 @@ export abstract class Controller extends Disposable {
         return true;
       }
   
-      if (this.#keyActionTable && this.handleKeyInActionTable(keyData, this.#keyActionTable)) {
+      if (this.handleKeyAction(keyData)) {
         return true;
       }
   
@@ -178,11 +176,28 @@ export abstract class Controller extends Disposable {
     }
   }
 
-  preProcessKey(keyData: chrome.input.ime.KeyboardEvent) {
+  handleKeyAction(keyData: chrome.input.ime.KeyboardEvent) {
+
+    let status = this.model.status;
+    let keyActionMap = this._keyActionAllMap.get(status);
+    if (keyActionMap) {
+      let keyActionName = [
+        keyData.key,
+        keyData.type == "keydown" ? 1 : 0, 
+        keyData.ctrlKey ? 1 : 0,
+        keyData.altKey ? 1 : 0,
+        keyData.shiftKey ? 1 : 0
+      ].join("::");
+      
+      if (keyActionMap.has(keyActionName) && keyActionMap.get(keyActionName)!()) {
+        return true;
+      }
+    }
+
     return false;
   }
 
-  handleKeyInActionTable(keyData: chrome.input.ime.KeyboardEvent, table: ActionType[]) {
+  preProcessKey(keyData: chrome.input.ime.KeyboardEvent) {
     return false;
   }
 
@@ -194,22 +209,30 @@ export abstract class Controller extends Disposable {
     return true;
   }
  
-  getKeyActionTable(): ActionType[] {
+  // getKeyActionTable(): ActionType[] {
 
-    let isPureModifiers = () => {
+  //   let isPureModifiers = () => {
 
-    }
+  //   }
 
-    let list: ActionType[] = [];
-    // Esc key.
-    list.push(["keyup", [false, false, false], "Esc", null, false, null, this.hideIME, this, []]);
-    // Alt + Space.
-    list.push(["keydown", [false, false, true], " ", Status.INITED, true, null, this.handleIMESwitchKey1, this, []]);
-    // Control + Shift.
-    list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, () => {}, this, []]);
-    list.push(["keyup", [true, false, false], "Shift", Status.INITED, false, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
-    
-    return [];
+  //   let list: ActionType[] = [];
+    // // Esc key.
+    // list.push(["keyup", [false, false, false], "Esc", null, false, null, this.hideIME, this, []]);
+    // // Alt + Space.
+    // list.push(["keydown", [false, false, true], " ", Status.INITED, true, null, this.handleIMESwitchKey1, this, []]);
+    // // Control + Shift.
+    // list.push(["keydown", [true, false, false], "Shift", Status.INITED, true, isPureModifiers, () => {}, this, []]);
+    // list.push(["keyup", [true, false, false], "Shift", Status.INITED, false, isPureModifiers, this.handleIMESwitchKey2, this, [true]]);
+    // // Move Up.
+    // list.push(["keydown", [false, false, false], "Up", Status.SHOWING, true, null, this.processChoose, this, []]);
+    // list.push(["keydown", [false, false, false], "Down", Status.SHOWING, true])
+
+  //   return list;
+  // }
+
+  initIMEKeyAction() {
+    this._keyActionAllMap = new Map;
+
   }
 
   setData(newData: PartialViewDataModel, isRender: boolean = true) {
@@ -253,8 +276,6 @@ export abstract class Controller extends Disposable {
         this.model.status = Status.COMMITTING;
         break;
       case "setCandidates":
-        this.model.status = Status.SHOWING;
-        break;
       case "setComposition":
         this.model.status = Status.COMPOSING;
         break;
@@ -262,7 +283,7 @@ export abstract class Controller extends Disposable {
       case "setCandidateWindowProperties":
       case "hideInputView":
         if (type === "setCandidateWindowProperties" && (value[0] as chrome.input.ime.CandidateWindowParameter).properties.visible) return;
-        this.model.status = Status.INITED;
+        this.model.status = Status.FOCUS;
         break;
       default:
         // pass.

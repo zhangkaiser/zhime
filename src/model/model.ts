@@ -49,25 +49,24 @@ export class Model extends Disposable implements IModel {
   static RECONNECT_TIMEOUT = 3 * 60 * 1000;
 
   contextID: number = 0;
-  status = Status.NO;
+  status = Status.BLUR;
   connected = false;
   isWebEnv = false;
   registedDecoder?: DeocderType;
   states?: PartialViewDataModel;
 
-  #focus: boolean = false;
   #intervalID = 0;
 
   focusAction?: Function;
   blurAction?: Function;
 
   set focus(value: boolean) {
-    this.#focus = value;
+    this.status = +value;
     if (value) this.focusAction ? this.focusAction() : "";
     else this.blurAction ? this.blurAction() : "";
   }
   get focus() {
-    return this.#focus;
+    return !!this.status;
   }
 
   globalState = defaultGlobalState;
@@ -84,7 +83,6 @@ export class Model extends Disposable implements IModel {
   clear() {
     this.contextID = 0;
     this.focus = false;
-    this.status = Status.NO;
   }
 
   reset() {

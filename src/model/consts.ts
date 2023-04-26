@@ -1,11 +1,9 @@
 
-export enum Status {
-  NO, // No focus.
-  INITED, 
-  SHOWING,
+export const enum Status {
+  BLUR = 0,
+  FOCUS,
   COMPOSING,
-  COMMITTING, 
-  FETCHING
+  COMMITTING
 }
 
 export const KeyRexExp = {
