@@ -10,15 +10,13 @@ import { defaultGlobalState, IGlobalState } from "./storage";
 import { Status } from "./consts";
 import { PartialViewDataModel } from "./datamodel";
 import { EventEnum } from "src/consts/event";
-import { DeocderType, IEnv, mainDecoders, webDecoders } from "src/consts/env";
+import { DeocderType, RuntimeEnv, mainDecoders, webDecoders } from "src/consts/env";
+import { Config } from "./config";
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
 
 
 export interface IModel extends EventTarget {
-  
-  /** The engine id of IME. */
-  engineID: string;
   /** The input context id of IME. */
   contextID: number;
   /** The focus status of IME. */
@@ -41,12 +39,13 @@ export interface IModel extends EventTarget {
 
 export class Model extends Disposable implements IModel {
 
-  constructor(readonly env: IEnv) {
-    super();
-    this.isWebEnv = env === "web";
-  }
+  config = new Config();
 
-  static RECONNECT_TIMEOUT = 3 * 60 * 1000;
+  constructor(readonly env: RuntimeEnv) {
+    super();
+
+    this.isWebEnv = env == RuntimeEnv.Web;
+  }
 
   contextID: number = 0;
   status = Status.BLUR;
@@ -54,6 +53,11 @@ export class Model extends Disposable implements IModel {
   isWebEnv = false;
   registedDecoder?: DeocderType;
   states?: PartialViewDataModel;
+
+  shiftLock = false;
+  _lastKeyIsShift = false;
+
+  requestId = 0;
 
   #intervalID = 0;
 
@@ -80,8 +84,6 @@ export class Model extends Disposable implements IModel {
   globalState = defaultGlobalState;
 
   eventDispatcher = new RemoteEventDispatcher();
-
-  engineID: string = "zhime";
 
   notifyUpdate(eventName: string, value: any[]) {
     let results = this.eventDispatcher.dispatchMessage(eventName, value);
@@ -157,7 +159,7 @@ export class Model extends Disposable implements IModel {
       this.#intervalID = setInterval(() => {
         if (process.env.DEV) console.log("focusAction.");
         decoderPort.reconnect();
-      }, Model.RECONNECT_TIMEOUT) as any;
+      }, this.config.reconnectTimeout) as any;
     }
 
     this.blurAction = () => {

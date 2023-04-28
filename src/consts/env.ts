@@ -1,5 +1,12 @@
 
-export type IEnv = "chromeos" | "vscode" | "extensions" | "web";
+export const enum RuntimeEnv {
+  ChromeOS,
+  VSCode,
+  Extensions,
+  Web,
+  Miniprogram
+}
+
 export type DeocderType = "librime" | "shuangpin";
 
 export const webDecoders = {

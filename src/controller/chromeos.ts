@@ -6,11 +6,12 @@ import { ChromeOSView } from "src/view/chromeos";
 import { EventEnum } from "src/consts/event";
 
 import { Controller } from "./baseController";
+import { RuntimeEnv } from "src/consts/env";
 
 export class ChromeOSController extends Controller {
 
   constructor() {
-    super("chromeos");
+    super(RuntimeEnv.ChromeOS);
     this.view = new ChromeOSView();
   }
 

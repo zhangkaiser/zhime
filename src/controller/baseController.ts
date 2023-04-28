@@ -10,7 +10,7 @@ import { IGlobalState, storageInstance } from "src/model/storage";
 
 import { EventEnum } from "src/consts/event";
 import { IIMEMethodUnion, imeEventList, imeMethodList } from "src/consts/chromeosIME";
-import { IEnv } from "src/consts/env";
+import { RuntimeEnv } from "src/consts/env";
 
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
@@ -54,7 +54,7 @@ export abstract class Controller extends Disposable {
 
   protected _keyActionAllMap = new Map<Status | "all", Map<string, Function>>;
 
-  constructor(readonly env: IEnv) {
+  constructor(readonly env: RuntimeEnv) {
     super();
     this.model = new Model(env);
   }
@@ -118,7 +118,7 @@ export abstract class Controller extends Disposable {
     onActivate: async (engineID: string, screen: string) => {
       if (process.env.DEV) console.log("onActivate", engineID, screen);
       await this.loadGlobalState();
-      this.model.engineID = engineID;
+      this.model.config.engineID = engineID;
       this.initIMEKeyAction();
       this.model.reset();
       this.model.notifyUpdate("onActivate", [engineID, screen]);
@@ -294,7 +294,7 @@ export abstract class Controller extends Disposable {
     if (this.model.focus) {
       this.setData({
         setCandidateWindowProperties: {
-          engineID: this.model.engineID,
+          engineID: this.model.config.engineID,
           properties: { visible: false }
         },
         clearComposition: {

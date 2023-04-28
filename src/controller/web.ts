@@ -27,11 +27,9 @@ import "src/components/tui-editor";
 import "src/view/webime";
 import "src/components/edit-header";
 import "../../librime/emscripten/src/options-page";
+import { RuntimeEnv } from "src/consts/env";
 
 export class WebController extends Controller {
-
-  requestId = 0;
-  contextID = 0;
 
   containerElem = document.getElementById("container")!;
   loadingElem = document.getElementById("loading") as HTMLDivElement;
@@ -41,11 +39,8 @@ export class WebController extends Controller {
   edits: EditHeader;
   imeWidght: IMEWidght;
 
-  _lastKeyIsShift = false;
-  shiftLock = false;
-
   constructor() {
-    super("web");
+    super(RuntimeEnv.Web);
 
     this.render();
 
@@ -65,12 +60,12 @@ export class WebController extends Controller {
 
   registerIMElifecycleEvent() {
     this.disposable = registerEventTargetDisposable(this.imeView, "activate", () => {
-      this.imeLifecycles.onActivate("zhime", "");
+      this.imeLifecycles.onActivate(this.model.config.engineID, "");
     });
     this.disposable = registerGlobalEventDisposable(window, "onclose", this.imeLifecycles.onDeactivated);
 
     this.disposable = registerEmitterEventDisposable(this.editor.editor, "focus", this.onFocusAdapter.bind(this));
-    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.imeLifecycles.onBlur(this.contextID) });
+    this.disposable = registerEmitterEventDisposable(this.editor.editor, "blur", () => { this.imeLifecycles.onBlur(this.model.contextID) });
   }
 
   registerWindowListeners() {
@@ -115,7 +110,7 @@ export class WebController extends Controller {
   }
 
   onKeyEventAdapter(e: KeyboardEvent) {
-    this.requestId++;
+    this.model.requestId++;
     const {ctrlKey, altKey, shiftKey, code, key, metaKey, type} = e;
     const keyData = {
       ctrlKey, altKey, shiftKey,  
@@ -134,22 +129,22 @@ export class WebController extends Controller {
     }
 
     if (type === "keydown") {
-      if (this.handleShiftKey(keyData) || this.shiftLock) return ;
+      if (this.handleShiftKey(keyData) || this.model.shiftLock) return ;
     } else {
-      if (this._lastKeyIsShift) {
-        this.shiftLock = !this.shiftLock;
+      if (this.model._lastKeyIsShift) {
+        this.model.shiftLock = !this.model.shiftLock;
       }
-      if (this.model.status !== Status.INITED) {
-        this.shiftLock = false;
+      if (this.model.status !== Status.FOCUS) {
+        this.model.shiftLock = false;
       }
       if (key === "Shift") {
         return;
       }
     }
     
-    let requestId = '' + this.requestId;
+    let requestId = '' + this.model.requestId;
     if (!this.imeEvents.onKeyEvent('zhime', keyData, requestId)) {
-      if (this.model.status === Status.INITED && (key.length != 1 || key == ' ' || /^[0-9]/.test(key))) {
+      if (this.model.status === Status.FOCUS && (key.length != 1 || key == ' ' || /^[0-9]/.test(key))) {
         return;
       }
     }
@@ -158,14 +153,14 @@ export class WebController extends Controller {
 
   handleShiftKey(keyEvent: chrome.input.ime.KeyboardEvent) {
     if (keyEvent.shiftKey && keyEvent.key === "Shift") {
-      this._lastKeyIsShift = keyEvent.code === "ShiftLeft";
+      this.model._lastKeyIsShift = keyEvent.code === "ShiftLeft";
 
-      if (!this._lastKeyIsShift) {
+      if (!this.model._lastKeyIsShift) {
         keyEvent.key = "Shift_R";
         keyEvent.shiftKey = false;
       }
     } else {
-      this._lastKeyIsShift = false;
+      this.model._lastKeyIsShift = false;
     }
 
     if (/^[A-Z]$/.test(keyEvent.key)) return true;
@@ -174,8 +169,8 @@ export class WebController extends Controller {
   }
 
   onFocusAdapter(e: Event) {
-    this.contextID++;
-    let context = {contextID: this.contextID};
+    this.model.contextID++;
+    let context = {contextID: this.model.contextID};
     this.imeLifecycles.onFocus(context as any);
   }
 
