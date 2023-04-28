@@ -12,7 +12,7 @@ import { registerEmitterEventDisposable, registerEventTargetDisposable, register
 import { Controller } from "./baseController";
 
 import { Status } from "src/model/consts";
-import { storageInstance } from "src/model/storage";
+import { IMEStorageKey, storageInstance } from "src/model/storage";
 
 import type { TuiEditor } from "src/components/tui-editor";
 import type { EditHeader } from "src/components/edit-header";
@@ -98,11 +98,7 @@ export class WebController extends Controller {
   }
 
   setGlobalStorage() {
-    storageInstance.set("global_state", {
-      decoder: "librime",
-      remote: false
-    });
-    this.initialize();
+    storageInstance.set(IMEStorageKey.config, this.model.config);
   }
 
   printErr(args: any) {

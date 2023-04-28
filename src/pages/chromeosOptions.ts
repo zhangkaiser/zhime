@@ -8,10 +8,11 @@ import shuangpinIcon from "src/icons/chromeos-shuangpin-ime";
 import rimeIcon from "src/icons/rime";
 
 import { DeocderType, mainDecoders } from "src/consts/env";
-import { defaultGlobalState, IGlobalState, setGlobalLocalStorageInstance, storageInstance } from "src/model/storage";
+import { IMEStorageKey, setGlobalLocalStorageInstance, storageInstance } from "src/model/storage";
 
 // @ts-ignore
 import type { OptionsPage as LibrimeOptionsPage } from "../../librime/emscripten/src/options-page";
+import { Config } from "src/model/config";
 
 interface DecoderInfo {
   name: string,
@@ -170,33 +171,28 @@ class OptionsPage extends LitElement {
     
   `;
 
-  @state() globalState: IGlobalState = defaultGlobalState;
+  @state() config: Config = new Config();
 
   constructor() {
     super();
     setGlobalLocalStorageInstance(LocalStorage<any>);
-    storageInstance.get("global_state").then((res) => {
-      if (!res || !res['global_state']) {
-        res = { global_state: defaultGlobalState }
+    storageInstance.get(IMEStorageKey.config).then((res) => {
+      if (res && res[IMEStorageKey.config]) {
+        this.changeConfig(res[IMEStorageKey.config]);
+        return;
       }
-      this.changeGlobalState(res['global_state']);
     });
   }
 
-  changeGlobalState(newState: Partial<IGlobalState>) {
-    this.globalState = {
-      ...defaultGlobalState,
-      ...newState
-    }
-    // TODO(Simple implementation.)
-    if (this.globalState.remote) {
-      this.currentMode = 1
-    } else {
-      this.currentMode = 0
+  changeConfig(newConfig: Partial<Config>) {
+    this.config = {
+      ...this.config,
+      ...newConfig
     }
 
-    storageInstance.set("global_state", this.globalState);
+    storageInstance.set(IMEStorageKey.config, this.config);
   }
+
 
   get mainElement() {
     return this.shadowRoot!.getElementById("maindecoder") as HTMLInputElement;
@@ -206,7 +202,7 @@ class OptionsPage extends LitElement {
 
   success() {
     let { value } = this.mainElement;
-    this.changeGlobalState({
+    this.changeConfig({
       decoder: value as DeocderType
     });
 
@@ -232,7 +228,7 @@ class OptionsPage extends LitElement {
     } else {
       state.decoder = "";
     }
-    this.changeGlobalState(state);
+    this.changeConfig(state);
   }
 
   #workers: Record<string, Worker> = {

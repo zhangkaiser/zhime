@@ -1,17 +1,16 @@
 import { RemoteEventDispatcher } from "src/api/common/event";
-import { IMEMethodInterface } from "src/consts/chromeosIME";
 import { Disposable } from "src/api/common/disposable";
 import { IPort, WebWorkerPort } from "src/api/common/port";
 import { Port } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
 import { isExt, isWebWorker } from "src/api/common/env";
 
-import { defaultGlobalState, IGlobalState } from "./storage";
+import { IMEStorageKey, storageInstance } from "./storage";
 import { Status } from "./consts";
-import { PartialViewDataModel } from "./datamodel";
+import { ViewDataStore } from "./datamodel";
 import { EventEnum } from "src/consts/event";
 import { DeocderType, RuntimeEnv, mainDecoders, webDecoders } from "src/consts/env";
-import { Config } from "./config";
+import { Config, ConnectionType } from "./config";
 
 export type IIMEMethodRenderDetail = [IMessageObjectType, IPort, boolean];
 
@@ -26,9 +25,7 @@ export interface IModel extends EventTarget {
   /** The input status of IME. */
   status: Status;
 
-  states?: PartialViewDataModel;
-
-  globalState: IGlobalState;
+  store: ViewDataStore;
 
   notifyUpdate: (eventName: string, value: any[]) => boolean;
 
@@ -41,6 +38,8 @@ export class Model extends Disposable implements IModel {
 
   config = new Config();
 
+  store = new ViewDataStore();
+
   constructor(readonly env: RuntimeEnv) {
     super();
 
@@ -51,8 +50,7 @@ export class Model extends Disposable implements IModel {
   status = Status.BLUR;
   connected = false;
   isWebEnv = false;
-  registedDecoder?: DeocderType;
-  states?: PartialViewDataModel;
+  registedMainDecoder?: string;
 
   shiftLock = false;
   _lastKeyIsShift = false;
@@ -81,8 +79,6 @@ export class Model extends Disposable implements IModel {
     // this.
   }
 
-  globalState = defaultGlobalState;
-
   eventDispatcher = new RemoteEventDispatcher();
 
   notifyUpdate(eventName: string, value: any[]) {
@@ -93,62 +89,75 @@ export class Model extends Disposable implements IModel {
   clear() {
     this.contextID = 0;
     this.focus = false;
+    this.store.clear();
   }
 
   reset() {
     this.clear();
-    this.registerDecoder();
+    this.loadMainDecoder();
+    this.loadSubDecoders();
   }
 
+  
   resetEventDispatcher() {
     this.eventDispatcher.dispose();
     Model.clear(this.eventDispatcher);
   }
 
-  registerDecoder() {
+  private loadMainDecoder() {
     if (process.env.DEV) console.log("Register decoder.");
 
-    // TODO(May be unnecessary.)
-    if (
-      !this.globalState 
-      || !Reflect.has(this.globalState, "decoder") 
-      || !this.globalState.decoder
-    ) {
-      if (process.env.DEV) console.log("Incorrect global state object.");
-      this.eventDispatcher.dispatchMessage = (eventName, value) => {
-        if (eventName === "onKeyEvent") {
-          console.log("Not found decoder.");
-          isExt && this.dispatchEvent(
-            new CustomEvent("onmessage", 
-            {detail: [
-              { 
-                data: { type: "keyEventHandled", value: [[value[2], false]] }
-              },
-              null,
-              true ]
-            })
-          );
-        }
-        return [true];
-      }
-      return;
-    }
+    let { decoder, connection } = this.config;
 
-    let { remote: enableRemoteDecoder, decoder: decoderID } = this.globalState;
-
-    if ((isWebWorker && !enableRemoteDecoder) || decoderID === this.registedDecoder) {
-      return;
-    }
-    
     this.resetEventDispatcher();
 
-    if (this.isWebEnv || !enableRemoteDecoder) {
-      this.registerWebDecoder(this.isWebEnv ? webDecoders : mainDecoders, decoderID);
-    } else {
-      this.registerRemoteDecoder(decoderID);
+    switch(connection) {
+      case ConnectionType.Builtin:
+        this.registerBuiltinDecoder(decoder);
+        break;
+      case ConnectionType.Ext:
+        this.registerExtDecoder(decoder);
+        break;
+      case ConnectionType.Http:
+        this.registerHTTPDecoder(decoder);
+        break;
+      case ConnectionType.WS:
+        this.registerWSDecoder(decoder);
+        break;
+      default:
+        // pass.
     }
+    // if ((isWebWorker && !enableRemoteDecoder) || decoderID === this.registedDecoder) {
+    //   return;
+    // }
+    
+    // if (this.isWebEnv || !enableRemoteDecoder) {
+    //   this.registerWebDecoder(this.isWebEnv ? webDecoders : mainDecoders, decoderID);
+    // } else {
+    //   this.registerRemoteDecoder(decoder);
+    // }
 
-    this.registedDecoder = decoderID;
+    this.registedMainDecoder = decoder;
+  }
+
+  private loadSubDecoders() {
+    
+  }
+
+  registerBuiltinDecoder(decoder: string) {
+
+  }
+
+  registerHTTPDecoder(decoder: string) {
+
+  }
+
+  registerWSDecoder(decoder: string) {
+
+  }
+
+  registerExtDecoder(decoder: string) {
+
   }
 
   registerRemoteDecoder(decoderID: string) {
@@ -197,6 +206,17 @@ export class Model extends Disposable implements IModel {
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }
     this.eventDispatcher.add(decoderPort);
+  }
+
+  async loadConfig() {
+    return await storageInstance.get(IMEStorageKey.config).then((res) => {
+      if (res && res[IMEStorageKey.config]) {
+        this.config = res[IMEStorageKey.config];
+        return this.config;
+      } else {
+        return this.config;
+      }
+    });
   }
 
   [Symbol.toStringTag]() {

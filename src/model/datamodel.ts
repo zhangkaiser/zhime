@@ -77,3 +77,16 @@ export interface IDataModel {
 }
 
 export type PartialViewDataModel = Partial<IDataModel>;
+
+export class ViewDataStore {
+
+  data: PartialViewDataModel = {};
+
+  update(valueObj: PartialViewDataModel) {
+    this.data = { ...this.data, ...valueObj };
+  }
+
+  clear() {
+    this.data = {};
+  }
+}

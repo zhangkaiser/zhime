@@ -9,8 +9,6 @@ async function main() {
   
   let controller = new ChromeOSController();
 
-  await controller.initialize();
-
   controller.registerLifecycleEvent();
   controller.registerConnectionEvent();
 
@@ -18,7 +16,7 @@ async function main() {
   controller.registerIMEEvent();
   controller.registerSelfEvents();
   controller.registerModelEvent();
-
+  
 }
 
 main();

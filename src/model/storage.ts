@@ -1,30 +1,16 @@
 import { ILocalStorageConstructor, LocalStorage } from "src/api/common/storage";
-import { DeocderType } from "src/consts/env";
+import { Config } from "./config";
 
-/**
- * Global state storage interface.
- */
-export interface IGlobalState {
-  readonly decoder: DeocderType;
-  readonly remote: boolean;
-}
-
-export const defaultGlobalState: IGlobalState = {
-  decoder: "librime",
-  remote: false
-}
-
-export interface IDecoderItemModel {
-
+export const enum IMEStorageKey {
+  config
 }
 
 export interface IMELocalStorageTable {
-  global_state: IGlobalState,
-  decoders: {[name: string]: IDecoderItemModel}
+  [IMEStorageKey.config]: Config
 }
 
 export let storageInstance = new LocalStorage<IMELocalStorageTable>(); 
-export function setGlobalLocalStorageInstance(obj: ILocalStorageConstructor<IMELocalStorageTable>) {
-  storageInstance = new obj();
+export function setGlobalLocalStorageInstance(StorageConstructor: ILocalStorageConstructor<IMELocalStorageTable>) {
+  storageInstance = new StorageConstructor();
 }
 

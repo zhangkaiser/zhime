@@ -5,8 +5,7 @@ import { Disposable } from "src/api/common/disposable";
 
 import { Model, IIMEMethodRenderDetail } from "src/model/model";
 import { PartialViewDataModel } from "src/model/datamodel";
-import { KeyRexExp, Status } from "src/model/consts";
-import { IGlobalState, storageInstance } from "src/model/storage";
+import { Status } from "src/model/consts";
 
 import { EventEnum } from "src/consts/event";
 import { IIMEMethodUnion, imeEventList, imeMethodList } from "src/consts/chromeosIME";
@@ -14,6 +13,7 @@ import { RuntimeEnv } from "src/consts/env";
 
 import { View } from "src/view/view";
 import { IView } from "src/view/base";
+import { Config } from "src/model/config";
 
 const enum KeyEventType {
   up,
@@ -50,7 +50,8 @@ export abstract class Controller extends Disposable {
 
   model: Model;
   view: IView = new View();
-  loadGlobalStatePromise?: Promise<Record<"global_state", IGlobalState> | null | undefined>;
+
+  loadingConfigPromise?: Promise<Config>;
 
   protected _keyActionAllMap = new Map<Status | "all", Map<string, Function>>;
 
@@ -58,38 +59,13 @@ export abstract class Controller extends Disposable {
     super();
     this.model = new Model(env);
   }
-  
-  async initialize() {
-    await this.loadGlobalState();
-  }
 
   registerModelEvent() {
     this.model.addEventListener("onmessage", this.handleModelMessage.bind(this));
   }
 
-  protected loadGlobalState() {
-
-    this.loadGlobalStatePromise = storageInstance.get("global_state");
-    
-    return this.loadGlobalStatePromise.then((globalState) => {
-      if (globalState && globalState['global_state']) {
-        this.model.globalState = globalState['global_state'];
-        return globalState['global_state'];
-      } else {
-        this.openOptionsPage();
-        return undefined;
-      }
-    });
-
-  }
-
   abstract openOptionsPage():void;
   
-
-  setState() {
-    
-  }
-
   protected lifecycles = {
     onInstalled: (details: chrome.runtime.InstalledDetails) => {
     
@@ -115,37 +91,48 @@ export abstract class Controller extends Disposable {
   }
 
   protected imeLifecycles = {
-    onActivate: async (engineID: string, screen: string) => {
+    onActivate: (engineID: string, screen: string) => {
       if (process.env.DEV) console.log("onActivate", engineID, screen);
-      await this.loadGlobalState();
-      this.model.config.engineID = engineID;
-      this.initIMEKeyAction();
-      this.model.reset();
-      this.model.notifyUpdate("onActivate", [engineID, screen]);
+      this.loadingConfigPromise = this.model.loadConfig();
+      this.loadingConfigPromise.then(() => {
+        this.model.config.engineID = engineID;
+        this.initIMEKeyAction();
+        this.model.reset();
+        this.model.notifyUpdate("onActivate", [engineID, screen]);
+      });
     },
   
     onDeactivated: (engineID: string) => {
       if (process.env.DEV) console.log("onDeactivated", engineID);
-      this.model.notifyUpdate("onDeactivated", [engineID]);
+      if (!this.loadingConfigPromise) return;
+      this.loadingConfigPromise.then(() => {
+        this.model.notifyUpdate("onDeactivated", [engineID]);
+      });
     },
   
     onReset: (engineID: string) => {
       if (process.env.DEV) console.log("onReset", engineID);
-      this.model.notifyUpdate("onReset", [engineID]);
+      this.loadingConfigPromise?.then(() => {
+        this.model.notifyUpdate("onReset", [engineID]);
+      });
     },
   
     onBlur: (contextID: number) => {
       if (process.env.DEV) console.log("onBlur", contextID);
-      this.model.focus = false;
-      this.model.notifyUpdate("noBlur", [contextID]);
+      if (!this.loadingConfigPromise) return;
+      this.loadingConfigPromise.then(() => {
+        this.model.focus = false;
+        this.model.notifyUpdate("noBlur", [contextID]);
+      });
     },
   
-    onFocus: async (context: chrome.input.ime.InputContext) => {
+    onFocus: (context: chrome.input.ime.InputContext) => {
       if (process.env.DEV) console.log("onFocus", context.contextID);
-      if (this.loadGlobalStatePromise) await this.loadGlobalStatePromise;
-      this.loadGlobalStatePromise = undefined;
-      this.model.focus = true;
-      this.model.notifyUpdate("onFocus", [context]);
+
+      this.loadingConfigPromise?.then(() => {
+        this.model.focus = true;
+        this.model.notifyUpdate("onFocus", [context]);
+      });
     }
   }
 
@@ -153,11 +140,7 @@ export abstract class Controller extends Disposable {
     onKeyEvent: (engineID: string, keyData: chrome.input.ime.KeyboardEvent, requestId: string) => {
       if (process.env.DEV) console.log("onKeyEvent", keyData.type, keyData.key, requestId);
 
-      if (this.loadGlobalStatePromise) {
-        return true;
-      }
-
-      if (!this.model.status) { // No focus.
+      if (!this.model.status) { // Wait for status to be focus. 
         return true;
       }
 
@@ -194,13 +177,12 @@ export abstract class Controller extends Disposable {
 
   handleKeyAction(keyData: chrome.input.ime.KeyboardEvent) {
 
-
     let status = this.model.status;
     let currentStatusMap = this._keyActionAllMap.get(status);
     let allStatusMap = this._keyActionAllMap.get("all");
     let actionName = this.getKeyActionName(keyData);
     if (allStatusMap && allStatusMap.has(actionName) && allStatusMap.get(actionName)!()) {      
-        return true;
+      return true;
     }
 
     if (currentStatusMap && currentStatusMap.has(actionName) && currentStatusMap.get(actionName)!()) {
@@ -256,7 +238,7 @@ export abstract class Controller extends Disposable {
     const emptyBlock = () => true;
 
     const hideIME = () => (this.hideIME(), false);
-    this.addKeyAction("all", {key: "Esc", type: KeyEventType.up}, hideIME);
+    this.addKeyAction("all", {key: SpecialKey.ESC, type: KeyEventType.up}, hideIME);
 
     // Alt + space - 切换内置/已配置的输入法方法.
     const IMESwitchKey1 = () => (this.handleIMESwitchKey1(), true);
@@ -284,10 +266,9 @@ export abstract class Controller extends Disposable {
   setData(newData: PartialViewDataModel, isRender: boolean = true) {
     if (isRender && this.view) {
       this.view.states = newData;
-      return;
     }
 
-    this.model.states = newData;
+    this.model.store.update(newData);
   }
 
   hideIME() {
@@ -336,7 +317,6 @@ export abstract class Controller extends Disposable {
   }
 
   updateStatus(type: IIMEMethodUnion, value: readonly any[]) {
-
     switch(type) {
       case "commitText":
         this.model.status = Status.COMMITTING;

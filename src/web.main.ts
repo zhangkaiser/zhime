@@ -12,8 +12,6 @@ async function main() {
 
   controller.registerWindowListeners(); 
   controller.registerIMEViewListeners();
-  await controller.initialize();
-  
   controller.registerModelEvent();
   controller.registerIMEEvent();
   controller.registerIMElifecycleEvent();
