@@ -1,3 +1,4 @@
+import { Status } from "./consts";
 
 export const enum ConnectionType {
   Builtin,
@@ -7,7 +8,15 @@ export const enum ConnectionType {
 }
 
 export const enum SubRegistrationHook {
+  composition,
+  commit,
+  candidates
+}
 
+export interface ActionItem {
+  bindKey: any,
+  preventEvent: boolean,
+  status: Status.FOCUS | Status.COMPOSING
 }
 
 export class Config {
@@ -32,7 +41,8 @@ export class Config {
   subDecoders: {
     decoder: string,
     connection: ConnectionType,
-    registrations: SubRegistrationHook[]
+    registrations: SubRegistrationHook[],
+    actions: ActionItem[]
   }[] = [];
 
   static revert(key: keyof InstanceType<typeof Config>) {
