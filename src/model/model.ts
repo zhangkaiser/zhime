@@ -1,7 +1,7 @@
-import { RemoteEventDispatcher } from "src/api/common/event";
+import { IEventDispatcher, RemoteEventDispatcher } from "src/api/common/event";
 import { Disposable } from "src/api/common/disposable";
-import { IPort, WebWorkerPort } from "src/api/common/port";
-import { Port } from "src/api/extension/port";
+import { HTTPPort, InstancePort, IPort, WebSocketPort, WebWorkerPort } from "src/api/common/port";
+import { ExtensionPort } from "src/api/extension/port";
 import { IMessageObjectType } from "src/api/common/message";
 import { isExt, isWebWorker } from "src/api/common/env";
 
@@ -40,10 +40,16 @@ export class Model extends Disposable implements IModel {
 
   store = new ViewDataStore();
 
+  mainDispatcher: IEventDispatcher;
+  subDispatcher: IEventDispatcher;
+
   constructor(readonly env: RuntimeEnv) {
     super();
 
     this.isWebEnv = env == RuntimeEnv.Web;
+
+    this.mainDispatcher = new RemoteEventDispatcher();
+    this.subDispatcher = new RemoteEventDispatcher();
   }
 
   contextID: number = 0;
@@ -79,11 +85,16 @@ export class Model extends Disposable implements IModel {
     // this.
   }
 
-  eventDispatcher = new RemoteEventDispatcher();
-
   notifyUpdate(eventName: string, value: any[]) {
-    let results = this.eventDispatcher.dispatchMessage(eventName, value);
-    return !!(results.filter((result) => result).length);
+    let results = this.mainDispatcher.dispatchMessage(eventName, value);
+    if (process.env.DEV) console.log(results);
+    return true;
+  }
+
+  notifySubUpdate(eventName: string, value: any[]) {
+    let results = this.subDispatcher.dispatchMessage(eventName, value);
+    if (process.env.DEV) console.log(results);
+    return true;
   }
 
   clear() {
@@ -97,11 +108,15 @@ export class Model extends Disposable implements IModel {
     this.loadMainDecoder();
     this.loadSubDecoders();
   }
-
   
-  resetEventDispatcher() {
-    this.eventDispatcher.dispose();
-    Model.clear(this.eventDispatcher);
+  resetMainDispatcher() {
+    this.mainDispatcher.dispose();
+    Disposable.clear(this.mainDispatcher);
+  }
+
+  resetSubDispatcher() {
+    this.subDispatcher.dispose();
+    Disposable.clear(this.subDispatcher);
   }
 
   private loadMainDecoder() {
@@ -109,24 +124,12 @@ export class Model extends Disposable implements IModel {
 
     let { decoder, connection } = this.config;
 
-    this.resetEventDispatcher();
+    this.resetMainDispatcher();
+    let port = this.registerDecoder(connection, decoder);
 
-    switch(connection) {
-      case ConnectionType.Builtin:
-        this.registerBuiltinDecoder(decoder);
-        break;
-      case ConnectionType.Ext:
-        this.registerExtDecoder(decoder);
-        break;
-      case ConnectionType.Http:
-        this.registerHTTPDecoder(decoder);
-        break;
-      case ConnectionType.WS:
-        this.registerWSDecoder(decoder);
-        break;
-      default:
-        // pass.
-    }
+    this.mainDispatcher.add(port);
+
+    
     // if ((isWebWorker && !enableRemoteDecoder) || decoderID === this.registedDecoder) {
     //   return;
     // }
@@ -140,29 +143,49 @@ export class Model extends Disposable implements IModel {
     this.registedMainDecoder = decoder;
   }
 
+  private registerDecoder(connection: ConnectionType, decoder: string): IPort {
+    switch(connection) {
+      case ConnectionType.Ext:
+        return this.getExtDecoder(decoder);
+      case ConnectionType.Http:
+        return this.getHTTPDecoder(decoder);
+      case ConnectionType.WS:
+        return this.getWSDecoder(decoder);
+      default:
+        return this.getBuiltinDecoder(decoder);
+
+    }
+  }
+
   private loadSubDecoders() {
+
+    const decoders = this.config.subDecoders;
+
+    decoders.forEach(async (decoderConfig) => {
+      let port = this.registerDecoder(decoderConfig.connection, decoderConfig.decoder);
+    })
     
   }
 
-  registerBuiltinDecoder(decoder: string) {
-
+  getBuiltinDecoder(decoder: string) {
+    return new InstancePort(decoder);
   }
 
-  registerHTTPDecoder(decoder: string) {
-
+  getHTTPDecoder(decoder: string) {
+    return new HTTPPort(decoder);
   }
 
-  registerWSDecoder(decoder: string) {
-
+  getWSDecoder(decoder: string) {
+    return new WebSocketPort(decoder);
   }
 
-  registerExtDecoder(decoder: string) {
-
+  getExtDecoder(decoder: string) {
+    return new ExtensionPort(decoder);
   }
 
   registerRemoteDecoder(decoderID: string) {
     if (!isExt) return;
-    let decoderPort = new Port(decoderID);
+    let decoderPort = new ExtensionPort(decoderID);
 
     this.focusAction = () => {
       this.#intervalID = setInterval(() => {
@@ -205,7 +228,7 @@ export class Model extends Disposable implements IModel {
       }
       this.dispatchEvent(new CustomEvent<IIMEMethodRenderDetail>("onmessage", {detail: [msg, port, true]}));
     }
-    this.eventDispatcher.add(decoderPort);
+    this.mainDispatcher.add(decoderPort);
   }
 
   async loadConfig() {

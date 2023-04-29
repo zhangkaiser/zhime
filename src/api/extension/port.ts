@@ -3,14 +3,16 @@ import { registerEventDisposable } from "src/api/extension/event";
 import { Disposable } from "src/api/common/disposable";
 import { IMessageObjectType } from "src/api/common/message";
 
-export class Port extends Disposable implements IPort {
+/**
+ * Browser extension connection port.
+ */
+export class ExtensionPort extends Disposable implements IPort {
 
   #port?: chrome.runtime.Port;
 
   ondisconnect?: ((port: IPort) => void) | undefined;
   onmessage?: (msg: IMessageObjectType, port: IPort) => void;
   
-
   constructor(readonly name: string) {
     super();
   }
@@ -69,9 +71,13 @@ export class Port extends Disposable implements IPort {
   dispose() {
     this.disconnect();
   }
+
+  static Instance(port: chrome.runtime.Port) {
+    return new PortInstance(port);
+  }
 }
 
-export class PortInstance extends Port {
+export class PortInstance extends ExtensionPort {
   constructor(port: chrome.runtime.Port) {
     super(port.name);
     this.setPort(port);

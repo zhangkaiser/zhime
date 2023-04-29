@@ -2,11 +2,13 @@ import { Disposable, IDisposable } from "src/api/common/disposable";
 import { IPort } from "./port";
 
 export interface IEventDispatcherHandler {
-  verifyAuth?(name: string, type: string): boolean;
+  isAllow?(port: IPort, type: string): boolean;
 }
 
-export interface IEventDispatcher {
-  dispatchMessage(type: string, value: any[]): boolean[];
+export interface IEventDispatcher extends Disposable {
+  handler?: IEventDispatcherHandler;
+  add(port: IPort): void;
+  dispatchMessage(type: string, value: any[]): any;
 }
 
 export class RemoteEventDispatcher extends Disposable implements IEventDispatcher {
@@ -24,28 +26,21 @@ export class RemoteEventDispatcher extends Disposable implements IEventDispatche
     this.disposable = port;
   }
 
-  // connects() {
-  //   this.ports.forEach((item) => (item as IPort).connect());
-  // }
-
   dispatchMessage(type: string, value: any[]) {
-    let msg = {data: {type, value}};
-    let status: boolean[] = [];
+    const msg = {data: {type, value}};
+    const portStatus = new Map<IPort, boolean>;
     this.ports.forEach((item) => {
-      if (this.handler.verifyAuth && !this.handler.verifyAuth(item.name, type)) {
-        status.push(false);
+      if (this.handler.isAllow && !this.handler.isAllow(item, type)) {
+        portStatus.set(item, false);
         return ;
       }
 
-      if (item.postMessage(msg)) status.push(true);
-      else status.push(false);
+      portStatus.set(item, item.postMessage(msg));
     });
-    return status;
-  }
 
-  // dispose() {
-  //   this.ports.forEach((port) => port.disconnect());
-  // }
+    return portStatus;
+    
+  }
 
   [Symbol.toStringTag]() {
     return "RemoteEventDispatcher";
@@ -54,6 +49,9 @@ export class RemoteEventDispatcher extends Disposable implements IEventDispatche
 }
 
 export class EventDispatcher extends Disposable implements IEventDispatcher {
+  
+  add() {}
+
   dispatchMessage(type: string, value: any[]) {
     return [true];
   }

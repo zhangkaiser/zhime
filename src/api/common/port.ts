@@ -116,3 +116,70 @@ export class WebWorkerPort extends Disposable implements IPort {
   }
 
 }
+
+/** @todo need Implement */
+export class InstancePort extends Disposable implements IPort {
+  constructor(readonly name: string) {
+    super();
+  }
+
+  connect() {
+    return true;
+  }
+
+  reconnect() {
+    return true;
+  }
+
+  disconnect() {
+
+  }
+
+  postMessage(msg: IMessageObjectType) {
+    return true;
+  }
+}
+
+export class HTTPPort extends Disposable implements IPort {
+  constructor(readonly name: string) {
+    super();
+  }
+
+  connect() {
+    return true;
+  }
+
+  reconnect() {
+    return true;
+  }
+
+  disconnect() {
+
+  }
+
+  postMessage(msg: IMessageObjectType) {
+    return true;
+  }
+}
+
+export class WebSocketPort extends Disposable implements IPort {
+  constructor(readonly name: string) {
+    super();
+  }
+
+  connect() {
+    return true;
+  }
+
+  reconnect() {
+    return true;
+  }
+
+  disconnect() {
+
+  }
+
+  postMessage(msg: IMessageObjectType) {
+    return true;
+  }
+}
