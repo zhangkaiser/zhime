@@ -5,8 +5,6 @@
 #include <emscripten.h>
 #include <rime_api.h>
 
-#include "config.h"
-
 enum TraitsEnum {
   SHARED_DATA_DIR,
   USER_DATA_DIR,
