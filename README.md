@@ -1,5 +1,8 @@
 # ZHIME
 
+已经脱坑chrome os
+输入法替代品：[fydeRhythm](https://github.com/FydeOS/fydeRhythm)
+
 适用于ChomreOS的一款中文输入法。
 
 当前状态支持[librime-wasm](https://github.com/zhangkaiser/librime-wasm)和[shuangpin](https://github.com/zhangkaiser/chromeos-shuangpin-ime)两种解析方案。
